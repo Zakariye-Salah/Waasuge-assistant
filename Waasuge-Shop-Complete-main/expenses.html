@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>💸 Manage Expenses | Electronic Shop</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%25%22 stop-color=%22%232563eb%22/%3E%3Cstop offset=%22100%25%22 stop-color=%22%237c3aed%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22M14 26h36v24H14z%22 fill=%22%23fff%22 opacity=%22.96%22/%3E%3Cpath d=%22M18 22h28l4 4H14z%22 fill=%22%23fff%22 opacity=%22.92%22/%3E%3Cpath d=%22M22 31h8v10h-8zm12 0h10v10H34z%22 fill=%22%232563eb%22/%3E%3Cpath d=%22M27 13h10v11H27z%22 fill=%22%23fff%22 opacity=%22.95%22/%3E%3C/svg%3E"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<link href="./css/style.css" rel="stylesheet"/>
+<link href="./css/expenses.css" rel="stylesheet"/>
+<link rel="stylesheet" href="./css/assistant.css">
+
+<style>
+  
+  .expense-layout {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .expense-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    align-items: center;
+  }
+  .expense-filters .form-control,
+  .expense-filters .form-select,
+  .expense-filters .btn {
+    min-height: 42px;
+  }
+  .expense-filters .form-control,
+  .expense-filters .form-select {
+    flex: 1 1 190px;
+  }
+  .expense-filters .btn {
+    flex: 0 0 auto;
+  }
+  .expense-cards-view { display: none; }
+  .expense-table-view { display: block; }
+  @media (max-width: 767.98px) {
+    .expense-filters {
+      gap: .6rem;
+    }
+    .expense-filters .form-control,
+    .expense-filters .form-select,
+    .expense-filters .btn {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+    .expense-cards-view { display: block; }
+    .expense-table-view { display: none; }
+  }
+.expense-page .hero-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+  }
+  body.dark-mode .expense-page .hero-card {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+  }
+  .expense-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(37,99,235,.10);
+    color: #1d4ed8;
+    font-size: .82rem;
+    font-weight: 700;
+    margin: 0 .4rem .4rem 0;
+  }
+
+
+
+  body.dark-mode .expense-summary-card {
+    border-color: rgba(148, 163, 184, 0.14);
+    background:
+      linear-gradient(180deg, rgba(17,24,39,0.96), rgba(17,24,39,0.98));
+  }
+
+  .expense-summary-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -30px -38px auto;
+    width: 120px;
+    height: 120px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.10), transparent 70%);
+    pointer-events: none;
+  }
+
+  body.dark-mode .expense-summary-card::after {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 70%);
+  }
+
+  .expense-summary-card .summary-label {
+    font-size: 0.84rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .expense-summary-card .summary-value {
+    font-size: 1.75rem;
+    margin: 0.15rem 0 0.25rem;
+  }
+
+  .expense-summary-card .summary-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  body.dark-mode .expense-summary-card .summary-trend {
+    background: rgba(59, 130, 246, 0.12);
+  }
+
+  .billing-month-wrap {
+    transition: all 0.2s ease;
+  }
+
+  .billing-month-wrap.is-hidden {
+    display: none !important;
+  }
+
+  .expense-duration-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.35rem;
+  }
+
+</style>
+<style>
+  :root{
+    --bg: #f5f7fb;
+    
+    --card: rgba(255,255,255,0.985);
+    --text: #111827;
+    --muted: #6b7280;
+    --border: rgba(15, 23, 42, 0.08);
+    --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    --primary: #2563eb;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --info: #0891b2;
+    --purple: #7c3aed;
+    --dark-bg: #0b1220;
+    --dark-card: rgba(17,24,39,0.98);
+    --dark-text: #e5e7eb;
+    --dark-muted: #94a3b8;
+    --dark-border: rgba(148, 163, 184, 0.16);
+  }
+
+  html, body {
+    min-height: 100%;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.08), transparent 30%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  body.dark-mode {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.10), transparent 30%),
+      var(--dark-bg);
+    color: var(--dark-text);
+  }
+
+  .app-header {
+    backdrop-filter: blur(14px);
+  }
+
+  .sidebar {
+    width: 260px;
+    z-index: 1020;
+  }
+
+  .sidebar .nav-link,
+  .mobile-nav .nav-link {
+    color: inherit;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    font-weight: 600;
+  }
+
+  .sidebar .nav-link.active,
+  .mobile-nav .nav-link.active {
+    background: linear-gradient(135deg, var(--primary), #1d4ed8);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+  }
+
+  .page-wrap {
+    padding-top: 18px;
+    padding-bottom: 80px;
+  }
+
+  @media (min-width: 992px) {
+    .page-wrap {
+      margin-left: 260px;
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+  }
+
+  .page-title {
+    font-size: clamp(1.45rem, 2.5vw, 2.1rem);
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .page-subtitle {
+    color: var(--muted);
+    margin-bottom: 0;
+  }
+
+  .card-shell {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.25s ease, border-color 0.25s ease;
+  }
+
+  body.dark-mode .card-shell {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+  }
+
+  .card-shell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 46px rgba(15, 23, 42, 0.12);
+  }
+
+  .summary-card {
+    padding: 18px;
+    height: 100%;
+  }
+
+  .summary-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, rgba(37,99,235,0.22), rgba(124,58,237,0.18));
+    border: 1px solid rgba(255,255,255,0.28);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255,255,255,0.36);
+    backdrop-filter: blur(10px);
+  }
+
+  .summary-icon.bg-soft-primary { background: linear-gradient(135deg, rgba(37,99,235,0.28), rgba(37,99,235,0.18)) !important; color: #1d4ed8; }
+  .summary-icon.bg-soft-success { background: linear-gradient(135deg, rgba(22,163,74,0.28), rgba(22,163,74,0.18)) !important; color: #15803d; }
+  .summary-icon.bg-soft-warning { background: linear-gradient(135deg, rgba(245,158,11,0.28), rgba(245,158,11,0.18)) !important; color: #b45309; }
+  .summary-icon.bg-soft-danger { background: linear-gradient(135deg, rgba(220,38,38,0.28), rgba(220,38,38,0.18)) !important; color: #b91c1c; }
+  .summary-icon.bg-soft-info { background: linear-gradient(135deg, rgba(8,145,178,0.28), rgba(8,145,178,0.18)) !important; color: #0e7490; }
+  .summary-icon.bg-soft-purple { background: linear-gradient(135deg, rgba(124,58,237,0.28), rgba(124,58,237,0.18)) !important; color: #6d28d9; }
+  body.dark-mode .summary-icon.bg-soft-primary { background: linear-gradient(135deg, rgba(96,165,250,0.26), rgba(37,99,235,0.18)) !important; color: #bfdbfe; }
+  body.dark-mode .summary-icon.bg-soft-success { background: linear-gradient(135deg, rgba(74,222,128,0.24), rgba(22,163,74,0.16)) !important; color: #bbf7d0; }
+  body.dark-mode .summary-icon.bg-soft-warning { background: linear-gradient(135deg, rgba(251,191,36,0.24), rgba(245,158,11,0.16)) !important; color: #fde68a; }
+  body.dark-mode .summary-icon.bg-soft-danger { background: linear-gradient(135deg, rgba(248,113,113,0.22), rgba(220,38,38,0.16)) !important; color: #fecaca; }
+  body.dark-mode .summary-icon.bg-soft-info { background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(8,145,178,0.16)) !important; color: #a5f3fc; }
+  body.dark-mode .summary-icon.bg-soft-purple { background: linear-gradient(135deg, rgba(167,139,250,0.24), rgba(124,58,237,0.16)) !important; color: #ddd6fe; }
+
+  .summary-label {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+
+  body.dark-mode .summary-label,
+  body.dark-mode .text-muted,
+  body.dark-mode .page-subtitle {
+    color: var(--dark-muted) !important;
+  }
+
+  .summary-value {
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.15rem;
+  }
+
+  .summary-trend {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .section-header {
+    padding: 18px 18px 0 18px;
+  }
+
+  .section-body {
+    padding: 18px;
+  }
+
+  .mini-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bg-soft-primary { background: rgba(37, 99, 235, 0.18) !important; }
+  .bg-soft-success { background: rgba(22, 163, 74, 0.18) !important; }
+  .bg-soft-warning { background: rgba(245, 158, 11, 0.18) !important; }
+  .bg-soft-danger { background: rgba(220, 38, 38, 0.18) !important; }
+  .bg-soft-info { background: rgba(8, 145, 178, 0.18) !important; }
+  .bg-soft-purple { background: rgba(124, 58, 237, 0.18) !important; }
+body.dark-mode .bg-soft-primary { background: rgba(96,165,250,0.20) !important; }
+  body.dark-mode .bg-soft-success { background: rgba(74,222,128,0.18) !important; }
+  body.dark-mode .bg-soft-warning { background: rgba(251,191,36,0.20) !important; }
+  body.dark-mode .bg-soft-danger { background: rgba(248,113,113,0.18) !important; }
+  body.dark-mode .bg-soft-info { background: rgba(34,211,238,0.18) !important; }
+  body.dark-mode .bg-soft-purple { background: rgba(167,139,250,0.18) !important; }
+
+  .text-primary-soft { color: #2563eb; }
+  .text-success-soft { color: #16a34a; }
+  .text-warning-soft { color: #d97706; }
+  .text-danger-soft { color: #dc2626; }
+  .text-info-soft { color: #0891b2; }
+  .text-purple-soft { color: #7c3aed; }
+
+  .badge-pill {
+    border-radius: 999px;
+    padding: 0.48rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .table thead th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .table td {
+    vertical-align: middle;
+  }
+
+  body.dark-mode .table {
+    color: var(--dark-text);
+  }
+
+  body.dark-mode .table > :not(caption) > * > * {
+    background-color: transparent;
+    border-color: var(--dark-border);
+  }
+
+  body.dark-mode .table thead th {
+    color: var(--dark-muted);
+  }
+
+  .chart-placeholder {
+    min-height: 320px;
+    border-radius: 18px;
+    border: 1px dashed rgba(148, 163, 184, 0.45);
+    background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(241,245,249,0.95));
+  }
+
+  body.dark-mode .chart-placeholder {
+    background: linear-gradient(180deg, rgba(17,24,39,0.95), rgba(15,23,42,0.95));
+    border-color: rgba(148, 163, 184, 0.24);
+  }
+
+  .quick-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: inherit;
+    box-shadow: var(--shadow);
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+
+  body.dark-mode .quick-action {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+  }
+
+  .quick-action:hover {
+    transform: translateY(-1px);
+    color: inherit;
+    border-color: rgba(37, 99, 235, 0.28);
+  }
+
+  .quick-action i {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .muted-box {
+    border: 1px dashed var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    background: rgba(255,255,255,0.35);
+  }
+
+  body.dark-mode .muted-box {
+    background: rgba(17, 24, 39, 0.4);
+    border-color: var(--dark-border);
+  }
+
+  .mobile-bottom-nav {
+    z-index: 1030;
+  }
+
+  .mobile-bottom-nav a {
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.76rem;
+    font-weight: 700;
+    opacity: 0.82;
+  }
+
+  .mobile-bottom-nav a.active {
+    color: var(--primary);
+    opacity: 1;
+  }
+
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 7px;
+  }
+
+  .top-search {
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .top-search .form-control {
+    border-radius: 14px;
+    padding-left: 42px;
+    height: 46px;
+    border: 1px solid var(--border);
+    box-shadow: none !important;
+  }
+
+  body.dark-mode .top-search .form-control {
+    background: #0f172a;
+    color: var(--dark-text);
+    border-color: var(--dark-border);
+  }
+
+  .top-search .search-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: var(--muted);
+  }
+
+  .pill-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.45);
+  }
+
+  body.dark-mode .pill-stat {
+    border-color: var(--dark-border);
+    background: rgba(17, 24, 39, 0.5);
+  }
+
+
+  :root {
+    --sidebar-collapsed-width: 84px;
+  }
+
+  .sidebar {
+    width: 260px;
+    overflow: hidden;
+    transition: width 0.28s ease, padding 0.28s ease, background-color 0.28s ease, border-color 0.28s ease;
+  }
+
+  .sidebar .nav-link {
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sidebar .nav-link i {
+    flex-shrink: 0;
+  }
+
+  .sidebar .nav-link .nav-label,
+  .sidebar .sidebar-brand-text,
+  .sidebar .sidebar-footer-text {
+    transition: opacity 0.2s ease, transform 0.2s ease, max-width 0.28s ease;
+  }
+
+  .sidebar .sidebar-toggle {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+  }
+
+  .sidebar .sidebar-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+  }
+
+  body.sidebar-collapsed .sidebar {
+    width: var(--sidebar-collapsed-width) !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  body.sidebar-collapsed .sidebar .sidebar-brand-text,
+  body.sidebar-collapsed .sidebar .sidebar-footer-box,
+  body.sidebar-collapsed .sidebar .nav-label {
+    display: none !important;
+  }
+
+  body.sidebar-collapsed .sidebar .nav-link {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0.6rem !important;
+    padding-right: 0.6rem !important;
+  }
+
+  body.sidebar-collapsed .sidebar .nav-link i {
+    margin-right: 0 !important;
+  }
+
+  body.sidebar-collapsed .page-wrap {
+    margin-left: var(--sidebar-collapsed-width) !important;
+  }
+
+  body.sidebar-collapsed .sidebar .sidebar-toggle i {
+    transform: rotate(180deg);
+  }
+
+  @media (max-width: 991.98px) {
+    body.sidebar-collapsed .page-wrap {
+      margin-left: 0 !important;
+    }
+  }
+
+
+  .app-header {
+    transition: margin-left 0.28s ease, width 0.28s ease, left 0.28s ease, right 0.28s ease;
+    will-change: margin-left, width;
+  }
+
+  @media (min-width: 992px) {
+    .app-header {
+      margin-left: 260px;
+      width: calc(100% - 260px);
+    }
+    body.sidebar-collapsed .app-header {
+      margin-left: var(--sidebar-collapsed-width);
+      width: calc(100% - var(--sidebar-collapsed-width));
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    .app-header {
+      margin-left: 0 !important;
+      width: 100% !important;
+    }
+    .header-sidebar-toggle {
+      display: inline-flex !important;
+    }
+  }
+
+  .header-sidebar-toggle {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-sidebar-toggle i {
+    font-size: 1.05rem;
+  }
+
+</style>
+</head>
+<body class="expense-page">
+
+<!-- Header -->
+<header class="app-header sticky-top bg-white border-bottom shadow-sm">
+  <div class="container-fluid py-2 px-3 px-lg-4">
+  <div class="d-flex align-items-center justify-content-between gap-3">
+  
+  <div class="d-flex align-items-center gap-2 d-lg-none">
+<button type="button" class="btn btn-light border rounded-circle header-sidebar-toggle" data-sidebar-toggle aria-label="Open sidebar">
+  <i class="bi bi-list"></i>
+</button>
+<div class="rounded-3 d-flex align-items-center justify-content-center bg-primary text-white flex-shrink-0" style="width:42px;height:42px;"><i class="bi bi-shop"></i></div><div class="lh-sm"><div class="fw-bold">Waasuge Electronics</div><small class="text-muted">Dashboard</small></div></div>
+  <div class="d-none d-md-block top-search position-relative">
+  <i class="bi bi-search search-icon"></i>
+  <input aria-label="Search" class="form-control" placeholder="Search products, invoices, repairs..." type="search"/>
+  </div>
+  <div class="d-flex align-items-center gap-2 gap-md-3">
+  <button aria-label="Toggle theme" class="btn btn-light border rounded-circle position-relative" id="themeToggle" type="button">
+  <i class="bi bi-moon-stars" id="themeIcon"></i>
+  </button>
+  <div class="dropdown header-more-dropdown">
+  <button class="btn btn-light border rounded-circle position-relative header-more-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="More options" data-header-more-toggle="">
+  <i class="bi bi-three-dots-vertical"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end shadow border-0 header-more-menu">
+  <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#headerProfileModal"><i class="bi bi-person-gear text-primary"></i><span>Edit Profile</span></button></li>
+  <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#headerAboutModal"><i class="bi bi-info-circle text-info"></i><span>About Us</span></button></li>
+  <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#headerDeveloperModal"><i class="bi bi-code-slash text-success"></i><span>Developer</span></button></li>
+  
+  <li>
+    <a href="settings.html" style="text-decoration: none;"><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#">
+      <i  class="bi bi-gear-fill text-primary"></i> <span>Settings</span></button></a>
+  </li>  
+  <li>
+    <a href="expenses.html" style="text-decoration: none;"><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#">
+      <i  class="bi bi-graph-up-arrow text-primary"></i> <span>Manage Expenses</span></button></a>
+  </li>
+  <li><hr class="dropdown-divider"></li>
+  <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#headerLogoutModal"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button></li>
+  </ul>
+  </div>
+  <div class="dropdown">
+  <button aria-expanded="false" aria-label="Notifications" class="btn btn-light border rounded-circle position-relative" data-bs-toggle="dropdown" type="button">
+  <i class="bi bi-bell"></i>
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifBadge">3</span>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="min-width: 340px;">
+  <li class="px-2 py-1 fw-bold">Notifications</li>
+  <li><hr class="dropdown-divider"/></li>
+  <li>
+  <a class="dropdown-item rounded-3 py-2" href="#">
+  <div class="d-flex gap-2">
+  <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+  <div>
+  <div class="fw-semibold">Low stock alert</div>
+  <small class="text-muted">3 items need restocking.</small>
+  </div>
+  </div>
+  </a>
+  </li>
+  <li>
+  <a class="dropdown-item rounded-3 py-2" href="#">
+  <div class="d-flex gap-2">
+  <i class="bi bi-tools text-primary"></i>
+  <div>
+  <div class="fw-semibold">Repair update</div>
+  <small class="text-muted">1 repair moved to processing.</small>
+  </div>
+  </div>
+  </a>
+  </li>
+  <li>
+  <a class="dropdown-item rounded-3 py-2" href="#">
+  <div class="d-flex gap-2">
+  <i class="bi bi-bag-check-fill text-success"></i>
+  <div>
+  <div class="fw-semibold">Invoice completed</div>
+  <small class="text-muted">A sale was marked as paid.</small>
+  </div>
+  </div>
+  </a>
+  </li>
+  </ul>
+  </div>
+  <button aria-label="Cart" class="btn btn-light border rounded-circle position-relative" type="button">
+  <i class="bi bi-cart3"></i>
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" id="cartBadge">0</span>
+  </button>
+  </div>
+  </div>
+  </div>
+  </header>
+  <!-- Desktop Sidebar -->
+  <aside class="sidebar d-none d-lg-flex flex-column bg-white border-end position-fixed top-0 start-0 vh-100 p-3">
+  <div class="d-flex align-items-center justify-content-between gap-2 mb-4 mt-2 sidebar-brand-row"><div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1"><div class="rounded-3 d-flex align-items-center justify-content-center bg-primary text-white sidebar-logo"><i class="bi bi-shop"></i></div><div class="sidebar-brand-text lh-sm min-w-0"><div class="fw-bold text-truncate">Waasuge Electronics</div><small class="text-muted text-truncate d-block">Shop management tools</small></div></div><button aria-label="Collapse sidebar" class="btn btn-light border rounded-circle sidebar-toggle" data-sidebar-toggle="" title="Collapse sidebar" type="button"><i class="bi bi-list"></i></button></div>
+  <ul class="nav nav-pills flex-column gap-2">
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2 " href="dashboard.html"><i class="bi bi-grid-1x2-fill"></i> <span class="nav-label">Dashboard</span></a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="invoice.html"><i class="bi bi-receipt-cutoff"></i> <span class="nav-label">Invoice</span></a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="product.html"><i class="bi bi-box-seam"></i> <span class="nav-label">Products</span></a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="repairing.html"><i class="bi bi-tools"></i> <span class="nav-label">Repairing</span></a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="customers.html"><i class="bi bi-people-fill"></i> <span class="nav-label">Customers</span></a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="report.html"><i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span></a>
+  </li>
+  </ul>
+  <div class="mt-auto pt-4">
+  <div class="muted-box sidebar-footer-box"><div class="sidebar-footer-kicker d-inline-flex align-items-center gap-2 px-2 py-1 rounded-pill mb-2" style="background: rgba(37,99,235,.10); color:#2563eb; font-size:.78rem; font-weight:700;"><i class="bi bi-stars"></i> System status</div>
+  <div class="fw-bold mb-1">System status</div>
+  <small class="text-muted d-block sidebar-footer-text">Firebase ready, notifications enabled, and quick actions available.</small>
+  </div>
+  </div>
+  </aside>
+  <!-- Mobile Offcanvas -->
+  <div aria-labelledby="mobileNavLabel" class="offcanvas offcanvas-start d-lg-none mobile-nav" id="mobileNav" tabindex="-1">
+  <div class="offcanvas-header border-bottom">
+  <h5 class="offcanvas-title fw-bold" id="mobileNavLabel">Menu</h5>
+  <button aria-label="Close" class="btn-close" data-bs-dismiss="offcanvas" type="button"></button>
+  </div>
+  <div class="offcanvas-body p-3">
+  <ul class="nav nav-pills flex-column gap-2">
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2 " href="dashboard.html">
+  <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            </a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="invoice.html">
+  <i class="bi bi-receipt-cutoff"></i> Invoice
+            </a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="product.html">
+  <i class="bi bi-box-seam"></i> Products
+            </a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="repairing.html">
+  <i class="bi bi-tools"></i> Repairing
+            </a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="customers.html">
+  <i class="bi bi-people-fill"></i> Customers
+            </a>
+  </li>
+  <li class="nav-item">
+  <a class="nav-link d-flex align-items-center gap-2" href="report.html">
+  <i class="bi bi-bar-chart-line"></i> Reports
+            </a>
+  </li>
+  </ul>
+  </div>
+  </div>
+
+<main class="page-wrap" id="expensePage">
+  <div class="container-fluid px-3 px-lg-4 py-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <div>
+        <h1 class="page-title mb-1">Manage Expenses</h1>
+        <p class="page-subtitle mb-0">Add, edit, delete, restore, and review business expenses.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <button class="btn btn-primary rounded-4" id="addExpenseBtn" type="button"><i class="bi bi-plus-circle me-1"></i>Add New Expense</button>
+        <button class="btn btn-outline-primary rounded-4" id="refreshExpenses" type="button"><i class="bi bi-arrow-repeat me-1"></i>Refresh</button>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4 expense-summary-grid">
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="hero-card expense-summary-card p-3 h-100">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="summary-label">Total Expense Rows</div>
+              <div class="summary-value" id="totalExpenseCount">0</div>
+              <div class="summary-trend text-primary-soft"><i class="bi bi-receipt me-1"></i> Active + archived</div>
+            </div>
+            <div class="summary-icon bg-soft-primary"><i class="bi bi-journal-text"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="hero-card expense-summary-card p-3 h-100">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="summary-label">Total Amount</div>
+              <div class="summary-value" id="totalExpenseAmount">$0</div>
+              <div class="summary-trend text-success-soft"><i class="bi bi-cash-coin me-1"></i> Live spend total</div>
+            </div>
+            <div class="summary-icon bg-soft-success"><i class="bi bi-currency-dollar"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="hero-card expense-summary-card p-3 h-100">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="summary-label">Active</div>
+              <div class="summary-value" id="activeExpenseCount">0</div>
+              <div class="summary-trend text-info-soft"><i class="bi bi-check-circle me-1"></i> Currently visible</div>
+            </div>
+            <div class="summary-icon bg-soft-info"><i class="bi bi-eye"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="hero-card expense-summary-card p-3 h-100">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <div class="summary-label">Deleted</div>
+              <div class="summary-value" id="deletedExpenseCount">0</div>
+              <div class="summary-trend text-danger-soft"><i class="bi bi-trash3 me-1"></i> Restorable records</div>
+            </div>
+            <div class="summary-icon bg-soft-danger"><i class="bi bi-trash3"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="expense-layout">
+      <div class="hero-card p-3 p-md-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">Expense Insights</h5>
+            <p class="text-muted mb-0">Track spend by type and duration.</p>
+          </div>
+          <span class="mini-pill bg-soft-danger text-danger-soft"><i class="bi bi-graph-up-arrow me-1"></i> Live</span>
+        </div>
+        <div class="summary-label mb-2">Summary by type and duration</div>
+        <div id="expenseTypeSummary"></div>
+      </div>
+
+      <div class="hero-card p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">Expense List</h5>
+            <p class="text-muted mb-0">Edit, delete, or restore records from the table or cards.</p>
+          </div>
+          <div class="text-muted small">Results: <span id="expenseResultCount">0 records</span></div>
+        </div>
+
+        <div class="expense-filters mb-3">
+          <input class="form-control search-input" id="expenseSearch" placeholder="Search expenses..." type="search"/>
+          <select class="form-select" id="filterType"></select>
+          <select class="form-select" id="filterStatus">
+            <option value="active">Active</option>
+            <option value="deleted">Deleted</option>
+            <option value="all">All</option>
+          </select>
+          <button class="btn btn-outline-secondary rounded-4" id="resetFilters" type="button">Reset</button>
+        </div>
+
+        <div id="expenseEmpty" class="alert alert-info d-none">No expenses found.</div>
+
+        <div class="expense-cards-view">
+          <div class="row g-3" id="expenseCards"></div>
+        </div>
+
+        <div class="expense-table-view table-responsive mt-2">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>No#</th><th>Title</th><th>Amount</th><th>Duration</th><th>Date</th><th>Notes</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 rounded-5 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-bold" id="expenseModalLabel">Add New Expense</h5>
+          <p class="text-muted mb-0 small">Save one-time or recurring costs.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <form id="expenseForm" class="row g-3">
+          <div class="col-12"><label class="form-label fw-semibold" for="expenseType">Type</label><select class="form-select" id="expenseType"></select></div>
+          <div class="col-12"><label class="form-label fw-semibold" for="expenseDuration">Duration</label><select class="form-select" id="expenseDuration"></select><div class="expense-duration-note">Select yearly to choose the month this expense should count in every year.</div></div>
+          <div class="col-12 billing-month-wrap is-hidden" id="billingMonthWrap"><label class="form-label fw-semibold" for="billingMonth">Yearly month</label><select class="form-select" id="billingMonth"></select><div class="expense-duration-note">This month will be used for yearly tracking and reports.</div></div>
+          <div class="col-12"><label class="form-label fw-semibold" for="expenseTitle">Title</label><input class="form-control" id="expenseTitle" placeholder="e.g. Generator fuel" type="text"/></div>
+          <div class="col-12 col-md-6"><label class="form-label fw-semibold" for="expenseAmount">Amount</label><input class="form-control" id="expenseAmount" min="0" step="0.01" type="number"/></div>
+          <div class="col-12 col-md-6"><label class="form-label fw-semibold" for="expenseDate">Date</label><input class="form-control" id="expenseDate" type="date"/></div>
+          <div class="col-12"><label class="form-label fw-semibold" for="expenseNotes">Notes</label><textarea class="form-control" id="expenseNotes" placeholder="Optional details"></textarea></div>
+          <div class="col-12 d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-secondary rounded-4" id="cancelExpenseBtn" type="button" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary rounded-4" id="saveExpenseBtn" type="submit"><i class="bi bi-plus-circle me-2"></i> Save Expense</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom navigation -->
+<nav class="mobile-bottom-nav d-lg-none position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-sm">
+  <div class="d-flex justify-content-around py-2">
+  <a class="text-center " href="dashboard.html">
+  <div><i class="bi bi-grid-1x2-fill"></i></div>
+  <small>Dashboard</small>
+  </a>
+  <a class="text-center" href="invoice.html">
+  <div><i class="bi bi-receipt-cutoff"></i></div>
+  <small>Invoice</small>
+  </a>
+  <a class="text-center" href="product.html">
+  <div><i class="bi bi-box-seam"></i></div>
+  <small>Products</small>
+  </a>
+  <a class="text-center" href="repairing.html">
+  <div><i class="bi bi-tools"></i></div>
+  <small>Repairing</small>
+  </a>
+  <a class="text-center" href="customers.html">
+  <div><i class="bi bi-people-fill"></i></div>
+  <small>Customers</small>
+  </a>
+  <a class="text-center" href="report.html">
+  <div><i class="bi bi-bar-chart-line"></i></div>
+  <small>Reports</small>
+  </a>
+  </div>
+  </nav>
+
+  <script>
+    const CART_KEY = 'electronicShopCartCount';
+    const NOTIF_KEY = 'electronicShopNotificationCount';
+
+    function syncHeaderBadges() {
+      const cartBadge = document.getElementById('cartBadge');
+      const notifBadge = document.getElementById('notifBadge');
+      const cartCount = Math.max(0, Number(localStorage.getItem(CART_KEY) || 0));
+      const notifCount = Math.max(0, Number(localStorage.getItem(NOTIF_KEY) || 0));
+
+      if (cartBadge) {
+        cartBadge.textContent = String(cartCount);
+        cartBadge.style.display = cartCount > 0 ? 'inline-flex' : 'none';
+      }
+      if (notifBadge) {
+        notifBadge.textContent = String(notifCount);
+        notifBadge.style.display = notifCount > 0 ? 'inline-flex' : 'none';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', syncHeaderBadges);
+    window.addEventListener('storage', (event) => {
+      if (event.key === CART_KEY || event.key === NOTIF_KEY) syncHeaderBadges();
+    });
+    window.addEventListener('app:cart-changed', syncHeaderBadges);
+    window.addEventListener('app:notif-changed', syncHeaderBadges);
+  </script>
+
+  <script type="module">
+    import { requireAuth } from "./js/auth.js";
+    requireAuth({ redirectUrl: "login.html" });
+  </script>
+  <script src="./js/navbar.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="./js/settings-config.js"></script>
+<script type="module" src="./js/expenses.js"></script>
+
+<script type="module" src="./js/assistant.js"></script>
+
+</body>
+</html>
