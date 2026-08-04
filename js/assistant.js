@@ -3570,7 +3570,6 @@ function buildUI() {
           <div class="waasuge-assistant-avatar-lg"><i class="bi bi-stars"></i></div>
           <div class="min-w-0">
             <div class="waasuge-assistant-title">Waasuge Assistant</div>
-            // <div class="waasuge-assistant-subtitle">Local helper • Somali / English</div>
           </div>
         </div>
         <div class="d-flex align-items-center gap-1">
