@@ -10,319 +10,817 @@
 
   <style>
     :root{
-      --bg1:#07111f;
+      --bg1:#04111f;
       --bg2:#0f172a;
-      --card:rgba(17,24,39,.78);
+      --card:rgba(15,23,42,.72);
+      --card-strong:rgba(15,23,42,.88);
       --line:rgba(148,163,184,.18);
       --text:#e5e7eb;
       --muted:#94a3b8;
       --green:#22c55e;
+      --green-2:#16a34a;
       --blue:#3b82f6;
+      --purple:#8b5cf6;
       --yellow:#f59e0b;
+      --shadow:0 24px 70px rgba(0,0,0,.34);
+      --shadow-soft:0 16px 42px rgba(0,0,0,.22);
+      --radius:28px;
     }
 
     *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
     body{
       margin:0;
       min-height:100vh;
       color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(59,130,246,.26), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(124,58,237,.18), transparent 30%),
+        radial-gradient(circle at top left, rgba(59,130,246,.24), transparent 27%),
+        radial-gradient(circle at top right, rgba(139,92,246,.16), transparent 24%),
+        radial-gradient(circle at bottom left, rgba(34,197,94,.16), transparent 28%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
       overflow-x:hidden;
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      letter-spacing:-0.01em;
     }
 
-    .shell{
-      position:relative;
-      min-height:100vh;
-      padding:24px 14px 40px;
-    }
-
-    .glow{
-      position:absolute;
+    body::before,
+    body::after{
+      content:"";
+      position:fixed;
       inset:auto;
-      width:340px;
-      height:340px;
-      border-radius:50%;
-      filter:blur(48px);
-      opacity:.35;
       pointer-events:none;
+      border-radius:999px;
+      filter:blur(50px);
+      opacity:.34;
+      z-index:0;
       animation: drift 12s ease-in-out infinite;
     }
-    .glow.one{top:-90px;left:-120px;background:rgba(59,130,246,.55)}
-    .glow.two{right:-120px;bottom:20px;background:rgba(34,197,94,.42);animation-delay:-6s}
-    @keyframes drift{
-      0%,100%{transform:translate3d(0,0,0) scale(1)}
-      50%{transform:translate3d(22px,-18px,0) scale(1.08)}
+
+    body::before{
+      width:320px;
+      height:320px;
+      top:-110px;
+      left:-100px;
+      background:rgba(59,130,246,.45);
     }
 
-    .cardx{
-      background:var(--card);
+    body::after{
+      width:360px;
+      height:360px;
+      right:-120px;
+      bottom:20px;
+      background:rgba(34,197,94,.38);
+      animation-delay:-6s;
+    }
+
+    @keyframes drift{
+      0%,100%{transform:translate3d(0,0,0) scale(1)}
+      50%{transform:translate3d(20px,-16px,0) scale(1.08)}
+    }
+
+    .page-shell{
+      position:relative;
+      z-index:1;
+      min-height:100vh;
+      padding:18px 14px 130px;
+    }
+
+    .container-narrow{
+      max-width: 1060px;
+      margin:0 auto;
+    }
+
+    .glass-card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(17,24,39,.82), rgba(15,23,42,.72));
       border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
       backdrop-filter:blur(18px);
       -webkit-backdrop-filter:blur(18px);
-      border-radius:28px;
-      box-shadow:0 28px 80px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+
+    .glass-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -12% -24% auto;
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(59,130,246,.16), transparent 68%);
+      pointer-events:none;
+    }
+
+    .top-hero{
+      padding:22px;
     }
 
     .brand{
       display:flex;
-      align-items:center;
-      gap:12px;
+      gap:14px;
+      align-items:flex-start;
     }
+
     .brand-badge{
-      width:56px;
-      height:56px;
-      border-radius:18px;
+      width:62px;
+      height:62px;
+      border-radius:20px;
       display:grid;
       place-items:center;
       background:linear-gradient(135deg, rgba(59,130,246,.22), rgba(34,197,94,.18));
       border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 12px 28px rgba(0,0,0,.18);
+      box-shadow:0 14px 30px rgba(0,0,0,.18);
       animation: floaty 4.5s ease-in-out infinite;
+      flex:0 0 auto;
     }
-    .brand-badge i{font-size:1.4rem}
+
+    .brand-badge i{font-size:1.45rem}
+
     @keyframes floaty{
       0%,100%{transform:translateY(0)}
       50%{transform:translateY(-6px)}
     }
 
-    .title{
-      font-weight:900;
-      letter-spacing:-.03em;
-      line-height:1.05;
-      margin:0;
-      font-size:clamp(1.8rem, 4vw, 3rem);
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:.45rem;
+      padding:.4rem .75rem;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:#dbeafe;
+      font-size:.8rem;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
     }
+
+    .title{
+      margin:.55rem 0 0;
+      font-weight:900;
+      letter-spacing:-.04em;
+      line-height:1.02;
+      font-size:clamp(1.8rem, 5vw, 3.2rem);
+    }
+
     .subtitle{
+      margin-top:.4rem;
       color:var(--muted);
-      margin-top:.35rem;
-      font-size:.96rem;
+      font-size:1rem;
+      line-height:1.55;
+      max-width:56rem;
     }
 
     .status-pill{
       display:inline-flex;
       align-items:center;
-      gap:.45rem;
-      padding:.42rem .78rem;
+      gap:.5rem;
+      padding:.48rem .8rem;
       border-radius:999px;
-      font-weight:800;
-      font-size:.8rem;
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
+      background:rgba(255,255,255,.07);
+      font-size:.82rem;
+      font-weight:800;
+      white-space:nowrap;
+      box-shadow:0 10px 22px rgba(0,0,0,.12);
     }
 
-    .info-grid{
+    .summary-grid{
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
       gap:14px;
-    }
-    @media (max-width: 767.98px){
-      .info-grid{grid-template-columns:1fr}
+      margin-top:14px;
     }
 
-    .info-card{
-      border-radius:22px;
+    @media (max-width: 767.98px){
+      .summary-grid{grid-template-columns:1fr}
+    }
+
+    .summary-card{
+      border-radius:24px;
       padding:16px;
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
-      min-height:100px;
+      box-shadow:var(--shadow-soft);
+      min-height:104px;
+      transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     }
-    .info-label{
+
+    .summary-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(255,255,255,.14);
+      box-shadow:0 18px 44px rgba(0,0,0,.26);
+    }
+
+    .summary-label{
+      color:var(--muted);
       font-size:.78rem;
       text-transform:uppercase;
       letter-spacing:.08em;
-      color:var(--muted);
       font-weight:800;
     }
-    .info-value{
-      margin-top:.3rem;
-      font-size:1.32rem;
+
+    .summary-value{
+      margin-top:.28rem;
       font-weight:900;
-      line-height:1.1;
+      font-size:clamp(1.1rem, 3vw, 1.65rem);
+      line-height:1.15;
       word-break:break-word;
     }
-    .info-sub{
+
+    .summary-sub{
       margin-top:.35rem;
-      color:var(--muted);
-      font-size:.88rem;
-    }
-
-    .pay-box{
-      padding:18px;
-    }
-    .ussd-box{
-      border-radius:22px;
-      padding:16px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      word-break:break-word;
-      font-size:1rem;
-      line-height:1.55;
-    }
-
-    .action-btn{
-      border:0;
-      border-radius:18px;
-      padding:14px 18px;
-      font-weight:900;
-      font-size:1rem;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:.55rem;
-      text-decoration:none;
-      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
-      will-change:transform;
-    }
-    .action-btn:hover{transform:translateY(-2px) scale(1.01)}
-    .action-btn:active{transform:translateY(0) scale(.99)}
-    .btn-pay{
-      background:linear-gradient(135deg, #16a34a, #22c55e);
-      color:#fff;
-      box-shadow:0 18px 34px rgba(34,197,94,.26);
-      animation:pulseGlow 2.4s ease-in-out infinite;
-    }
-    @keyframes pulseGlow{
-      0%,100%{filter:saturate(1)}
-      50%{filter:saturate(1.15) brightness(1.05)}
-    }
-    .btn-whatsapp{
-      background:linear-gradient(135deg, #075e54, #25d366);
-      color:#fff;
-      box-shadow:0 18px 34px rgba(37,211,102,.20);
-    }
-    .btn-call{
-      background:rgba(255,255,255,.08);
-      color:var(--text);
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    .small-note{
       color:var(--muted);
       font-size:.9rem;
     }
 
-    .loading{
+    .invoice-grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:14px;
+      margin-top:14px;
+    }
+
+    @media (max-width: 991.98px){
+      .invoice-grid{grid-template-columns:1fr}
+    }
+
+    .panel{
+      border-radius:26px;
+      padding:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .panel-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .section-kicker{
+      color:#cbd5e1;
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+    }
+
+    .section-title{
+      margin:.2rem 0 0;
+      font-size:1.1rem;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.5;
+    }
+
+    .mini-chip{
       display:inline-flex;
       align-items:center;
-      gap:.5rem;
+      gap:.35rem;
+      padding:.38rem .68rem;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:#dbeafe;
+      font-size:.78rem;
+      font-weight:800;
+    }
+
+    .info-stack{
+      display:grid;
+      gap:12px;
+    }
+
+    .info-line{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      padding:14px 15px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .info-line .label{
       color:var(--muted);
+      font-size:.82rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+    }
+
+    .info-line .value{
+      font-weight:900;
+      font-size:1rem;
+      text-align:right;
+      word-break:break-word;
+    }
+
+    .amount-hero{
+      border-radius:24px;
+      padding:18px;
+      background:
+        linear-gradient(135deg, rgba(59,130,246,.16), rgba(34,197,94,.13)),
+        rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .amount-row{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:12px;
+    }
+
+    @media (max-width: 575.98px){
+      .amount-row{grid-template-columns:1fr}
+    }
+
+    .amount-box{
+      padding:14px 15px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .amount-box .label{
+      color:var(--muted);
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+    }
+
+    .amount-box .value{
+      margin-top:.2rem;
+      font-size:1.2rem;
+      font-weight:900;
+      word-break:break-word;
+    }
+
+    .payment-block{
+      margin-top:14px;
+      display:grid;
+      gap:12px;
+    }
+
+    .payment-link{
+      width:100%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:.6rem;
+      text-decoration:none;
+      border-radius:20px;
+      padding:15px 18px;
+      font-weight:900;
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
+      will-change:transform;
+      border:0;
+    }
+
+    .payment-link:hover{
+      transform:translateY(-2px) scale(1.01);
+    }
+
+    .payment-link:active{
+      transform:translateY(0) scale(.99);
+    }
+
+    .payment-link.pay-now{
+      color:#fff;
+      background:linear-gradient(135deg, #16a34a, #22c55e);
+      box-shadow:0 18px 34px rgba(34,197,94,.24);
+      animation:pulseGlow 2.6s ease-in-out infinite;
+    }
+
+    .payment-link.ussd{
+      color:#ecfeff;
+      background:linear-gradient(135deg, rgba(15,118,110,.96), rgba(8,145,178,.94));
+      box-shadow:0 16px 30px rgba(8,145,178,.20);
+    }
+
+    .payment-link.whatsapp{
+      color:#fff;
+      background:linear-gradient(135deg, #075e54, #25d366);
+      box-shadow:0 16px 30px rgba(37,211,102,.18);
+    }
+
+    .payment-link.visit{
+      color:var(--text);
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.11);
+    }
+
+    @keyframes pulseGlow{
+      0%,100%{filter:saturate(1)}
+      50%{filter:saturate(1.12) brightness(1.05)}
+    }
+
+    .ussd-shell{
+      display:grid;
+      gap:10px;
+    }
+
+    .ussd-label{
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:900;
+      color:#cbd5e1;
+    }
+
+    .ussd-code{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      min-height:68px;
+      padding:14px 16px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:1.02rem;
+      line-height:1.6;
+      word-break:break-word;
+      text-decoration:none;
+      transition:transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .ussd-code:hover{
+      transform:translateY(-2px);
+      background:rgba(255,255,255,.08);
+      border-color:rgba(255,255,255,.16);
+    }
+
+    .footer-note{
+      color:var(--muted);
+      font-size:.93rem;
+      line-height:1.6;
+    }
+
+    .footer-thanks{
+      margin-top:10px;
+      font-weight:800;
+      color:#dbeafe;
+    }
+
+    .loading-row{
+      display:inline-flex;
+      align-items:center;
+      gap:.55rem;
+      color:var(--muted);
+      font-size:.92rem;
     }
 
     .error-box{
+      margin-top:14px;
       border-radius:20px;
-      border:1px solid rgba(239,68,68,.3);
+      border:1px solid rgba(239,68,68,.28);
       background:rgba(239,68,68,.10);
       color:#fecaca;
+      padding:14px 15px;
+    }
+
+    .skeleton{
+      position:relative;
+      overflow:hidden;
+      background:rgba(255,255,255,.06);
+    }
+
+    .skeleton::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      transform:translateX(-100%);
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+      animation: shimmer 1.35s infinite;
+    }
+
+    @keyframes shimmer{
+      100%{transform:translateX(100%)}
+    }
+
+    .floating-dock{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:14px;
+      z-index:50;
+      pointer-events:none;
+      padding:0 14px env(safe-area-inset-bottom);
+    }
+
+    .dock-inner{
+      max-width:1060px;
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      pointer-events:none;
+    }
+
+    .dock-btn{
+      pointer-events:auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:.5rem;
+      min-height:56px;
+      border-radius:18px;
+      padding:0 18px;
+      text-decoration:none;
+      font-weight:900;
+      box-shadow:0 16px 38px rgba(0,0,0,.24);
+      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .dock-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 20px 42px rgba(0,0,0,.28);
+    }
+
+    .dock-whatsapp{
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      padding:0;
+      font-size:1.25rem;
+      background:linear-gradient(135deg, #075e54, #25d366);
+      color:#fff;
+    }
+
+    .dock-visit{
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+    }
+
+    .dock-top{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+    }
+
+    @media (max-width: 575.98px){
+      .page-shell{padding-bottom:150px}
+      .dock-inner{
+        align-items:center;
+      }
+      .dock-visit{
+        flex:1;
+        justify-content:center;
+      }
+      .dock-top{
+        align-items:stretch;
+        width:100%;
+      }
+    }
+
+    .fade-up{
+      animation: fadeUp .55s ease both;
+    }
+
+    .fade-up.delay-1{animation-delay:.05s}
+    .fade-up.delay-2{animation-delay:.12s}
+    .fade-up.delay-3{animation-delay:.18s}
+    .fade-up.delay-4{animation-delay:.24s}
+
+    @keyframes fadeUp{
+      from{opacity:0; transform:translateY(14px)}
+      to{opacity:1; transform:translateY(0)}
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="glow one"></div>
-    <div class="glow two"></div>
-
-    <main class="container position-relative">
-      <div class="row justify-content-center">
-        <div class="col-12 col-xl-9">
-          <div class="cardx p-3 p-md-4 p-lg-5">
-            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-              <div class="brand">
-                <div class="brand-badge"><i class="bi bi-lightning-charge-fill"></i></div>
-                <div>
-                  <h1 class="title" id="shopName">Waasuge Electronics</h1>
-                  <div class="subtitle" id="shopSubtitle">Secure invoice payment page</div>
-                </div>
-              </div>
-              <span class="status-pill" id="statusPill"><i class="bi bi-hourglass-split"></i> Loading...</span>
-            </div>
-
-            <div class="mt-4 p-3 p-md-4 cardx" style="background:rgba(255,255,255,.04);">
-              <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
-                <div>
-                  <div class="info-label">Customer</div>
-                  <div class="info-value" id="customerName">—</div>
-                  <div class="info-sub" id="customerPhone">—</div>
-                </div>
-                <div class="text-md-end">
-                  <div class="info-label">Invoice</div>
-                  <div class="info-value" id="invoiceNo">—</div>
-                  <div class="info-sub" id="invoiceStatus">—</div>
+  <div class="page-shell">
+    <div class="container-narrow">
+      <main class="glass-card">
+        <section class="top-hero">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="brand fade-up">
+              <div class="brand-badge"><i class="bi bi-lightning-charge-fill"></i></div>
+              <div class="min-w-0">
+                <span class="eyebrow mb-1"><i class="bi bi-shield-check"></i> Secure invoice payment</span>
+                <h1 class="title" id="shopName">Waasuge Electronics</h1>
+                <div class="subtitle" id="welcomeText">
+                  Welcome! Your invoice payment page is ready.
                 </div>
               </div>
             </div>
 
-            <div class="info-grid mt-3">
-              <div class="info-card">
-                <div class="info-label">Total</div>
-                <div class="info-value" id="totalValue">$0.00</div>
-                <div class="info-sub">Full invoice amount</div>
+            <span class="status-pill fade-up delay-1" id="statusPill">
+              <i class="bi bi-hourglass-split"></i> Loading...
+            </span>
+          </div>
+
+          <div class="glass-card mt-4 p-3 p-md-4 fade-up delay-1" style="background:rgba(255,255,255,.04);">
+            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+              <div class="min-w-0">
+                <div class="section-kicker">Customer</div>
+                <div class="summary-value mt-1" id="customerName">—</div>
+                <div class="small-note mt-2" id="customerPhone">—</div>
               </div>
-              <div class="info-card">
-                <div class="info-label">Paid</div>
-                <div class="info-value" id="paidValue">$0.00</div>
-                <div class="info-sub">Already paid amount</div>
+              <div class="text-md-end min-w-0">
+                <div class="section-kicker">Invoice</div>
+                <div class="summary-value mt-1" id="invoiceNo">—</div>
+                <div class="small-note mt-2" id="invoiceStatus">—</div>
               </div>
-              <div class="info-card">
-                <div class="info-label">Remaining</div>
-                <div class="info-value" id="remainingValue">$0.00</div>
-                <div class="info-sub">This is the amount to pay</div>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card fade-up delay-2">
+              <div class="summary-label">Total</div>
+              <div class="summary-value" id="totalValue">$0.00</div>
+              <div class="summary-sub">Full invoice amount</div>
+            </div>
+            <div class="summary-card fade-up delay-3">
+              <div class="summary-label">Paid</div>
+              <div class="summary-value" id="paidValue">$0.00</div>
+              <div class="summary-sub">Already paid amount</div>
+            </div>
+            <div class="summary-card fade-up delay-4">
+              <div class="summary-label">Remaining</div>
+              <div class="summary-value" id="remainingValue">$0.00</div>
+              <div class="summary-sub">Amount to complete</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="invoice-grid px-3 px-md-4 pb-4">
+          <div class="panel fade-up delay-2">
+            <div class="panel-head">
+              <div>
+                <div class="section-kicker">Welcome message</div>
+                <h2 class="section-title mb-0" id="helloTitle">Hello 👋</h2>
+                <div class="small-note mt-2" id="helloText">
+                  Thank you for choosing Waasuge Electronics. Please review your invoice and complete payment easily.
+                </div>
+              </div>
+              <span class="mini-chip"><i class="bi bi-stars"></i> Fast & secure</span>
+            </div>
+
+            <div class="amount-hero">
+              <div class="section-kicker">Payment details</div>
+
+              <div class="amount-row">
+                <div class="amount-box">
+                  <div class="label">Customer</div>
+                  <div class="value" id="customerBox">—</div>
+                </div>
+                <div class="amount-box">
+                  <div class="label">Invoice</div>
+                  <div class="value" id="invoiceBox">—</div>
+                </div>
+              </div>
+
+              <div class="amount-row">
+                <div class="amount-box">
+                  <div class="label">Total</div>
+                  <div class="value" id="totalBox">$0.00</div>
+                </div>
+                <div class="amount-box">
+                  <div class="label">Remaining</div>
+                  <div class="value" id="remainingBox">$0.00</div>
+                </div>
               </div>
             </div>
 
-            <div class="mt-4 p-3 p-md-4 pay-box cardx">
-              <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-                <div>
-                  <div class="info-label">Habka Lacag Bixinta</div>
-                  <div class="small-note">Tap the button below to open the dialer with the exact balance.</div>
-                </div>
-                <a id="payNowLink" class="action-btn btn-pay" href="#">
-                  <i class="bi bi-telephone-fill"></i>
-                  📞 Pay Now
+            <div class="payment-block">
+              <a id="payNowLink" class="payment-link pay-now" href="#">
+                <i class="bi bi-telephone-fill"></i>
+                Pay Now
+              </a>
+
+              <div class="ussd-shell">
+                <div class="ussd-label">Habka Lacag Bixinta</div>
+                <a id="ussdLink" class="ussd-code" href="#" aria-label="Dial payment code">
+                  —
                 </a>
               </div>
 
-              <div class="mt-3 ussd-box" id="ussdBox">—</div>
-
-              <div class="d-flex flex-wrap gap-2 mt-3">
-                <a id="whatsappLink" class="action-btn btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer">
+              <div class="d-grid gap-2">
+                <a id="whatsappLink" class="payment-link whatsapp" href="#" target="_blank" rel="noopener noreferrer">
                   <i class="bi bi-whatsapp"></i>
                   WhatsApp
                 </a>
-                <a id="callPrimary" class="action-btn btn-call" href="tel:617125558">
-                  <i class="bi bi-telephone"></i>
-                  Call 617125558
-                </a>
-                <a id="callAlt" class="action-btn btn-call" href="tel:0617125558">
-                  <i class="bi bi-telephone-fill"></i>
-                  Call 0617125558
+                <a id="visitLink" class="payment-link visit" href="https://waasuge-shop.netlify.app/" target="_blank" rel="noopener noreferrer">
+                  <i class="bi bi-box-arrow-up-right"></i>
+                  Visit Us
                 </a>
               </div>
 
-              <div class="mt-4 small-note" id="helpText">
-                Need help? Call or WhatsApp us and mention your invoice number.
+              <div class="footer-note mt-2" id="pageNote">
+                Tap Pay Now to open the dialer with the exact remaining balance.
               </div>
             </div>
-
-            <div class="mt-4 d-flex justify-content-between flex-wrap gap-2 align-items-center">
-              <div class="small-note" id="footerNote">Waasuge Electronics</div>
-              <div class="loading" id="loadingText"><span class="spinner-border spinner-border-sm"></span> Loading invoice...</div>
-            </div>
-
-            <div class="mt-3 alert d-none error-box" id="errorBox"></div>
           </div>
+
+          <div class="panel fade-up delay-3">
+            <div class="panel-head">
+              <div>
+                <div class="section-kicker">Invoice preview</div>
+                <h2 class="section-title mb-0">Quick summary</h2>
+                <div class="small-note mt-2">Your invoice information appears here once loaded from the database.</div>
+              </div>
+              <span class="mini-chip"><i class="bi bi-receipt"></i> Live data</span>
+            </div>
+
+            <div class="info-stack">
+              <div class="info-line">
+                <div>
+                  <div class="label">Status</div>
+                  <div class="small-note">Current payment state</div>
+                </div>
+                <div class="value" id="statusText">—</div>
+              </div>
+
+              <div class="info-line">
+                <div>
+                  <div class="label">Invoice number</div>
+                  <div class="small-note">Reference ID</div>
+                </div>
+                <div class="value" id="invoiceText">—</div>
+              </div>
+
+              <div class="info-line">
+                <div>
+                  <div class="label">Payment method</div>
+                  <div class="small-note">Tap the code to dial</div>
+                </div>
+                <div class="value" id="methodText">Mobile Money</div>
+              </div>
+
+              <div class="info-line">
+                <div>
+                  <div class="label">Help</div>
+                  <div class="small-note">Use WhatsApp for quick support</div>
+                </div>
+                <div class="value">Available</div>
+              </div>
+            </div>
+
+            <div class="mt-3 footer-note">
+              Thank you for choosing Waasuge Electronics. We appreciate your trust and support.
+            </div>
+          </div>
+        </section>
+
+        <div class="px-3 px-md-4 pb-4">
+          <div class="footer-note text-center fade-up delay-4" id="footerText">
+            Waasuge Electronics
+          </div>
+          <div class="text-center footer-thanks fade-up delay-4">
+            Thank you for your purchase.
+          </div>
+          <div class="mt-3 loading-row justify-content-center" id="loadingRow">
+            <span class="spinner-border spinner-border-sm"></span>
+            Loading invoice...
+          </div>
+          <div class="error-box d-none" id="errorBox"></div>
         </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="floating-dock">
+    <div class="dock-inner">
+      <div class="dock-top">
+        <a id="dockWhatsApp" class="dock-btn dock-whatsapp" href="#" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+          <i class="bi bi-whatsapp"></i>
+        </a>
       </div>
-    </main>
+
+      <a id="dockVisit" class="dock-btn dock-visit" href="https://waasuge-shop.netlify.app/" target="_blank" rel="noopener noreferrer">
+        <i class="bi bi-box-arrow-up-right"></i>
+        Visit Us
+      </a>
+    </div>
   </div>
 
   <script type="module">
-    // If your database file has a different name, change this import path.
     import { getInvoices, getSettingValue, safeNumber, toArray } from "./js/database.js";
+
     const params = new URLSearchParams(location.search);
     const invoiceId = String(params.get("id") || "").trim();
 
@@ -330,7 +828,7 @@
 
     const ui = {
       shopName: el("shopName"),
-      shopSubtitle: el("shopSubtitle"),
+      welcomeText: el("welcomeText"),
       statusPill: el("statusPill"),
       customerName: el("customerName"),
       customerPhone: el("customerPhone"),
@@ -339,15 +837,25 @@
       totalValue: el("totalValue"),
       paidValue: el("paidValue"),
       remainingValue: el("remainingValue"),
+      customerBox: el("customerBox"),
+      invoiceBox: el("invoiceBox"),
+      totalBox: el("totalBox"),
+      remainingBox: el("remainingBox"),
       payNowLink: el("payNowLink"),
+      ussdLink: el("ussdLink"),
       whatsappLink: el("whatsappLink"),
-      ussdBox: el("ussdBox"),
-      loadingText: el("loadingText"),
+      visitLink: el("visitLink"),
+      dockWhatsApp: el("dockWhatsApp"),
+      dockVisit: el("dockVisit"),
+      statusText: el("statusText"),
+      invoiceText: el("invoiceText"),
+      methodText: el("methodText"),
+      helloTitle: el("helloTitle"),
+      helloText: el("helloText"),
+      pageNote: el("pageNote"),
+      footerText: el("footerText"),
+      loadingRow: el("loadingRow"),
       errorBox: el("errorBox"),
-      callPrimary: el("callPrimary"),
-      callAlt: el("callAlt"),
-      helpText: el("helpText"),
-      footerNote: el("footerNote"),
     };
 
     function money(value) {
@@ -365,7 +873,7 @@
       return String(value ?? "").replace(/\D/g, "");
     }
 
-    function normalizePhone(value) {
+    function normalizePhoneForWhatsApp(value) {
       const d = digitsOnly(value);
       if (!d) return "";
       if (d.startsWith("0")) return `252${d.slice(1)}`;
@@ -382,7 +890,7 @@
     }
 
     function showError(message) {
-      ui.loadingText?.classList.add("d-none");
+      ui.loadingRow?.classList.add("d-none");
       ui.errorBox?.classList.remove("d-none");
       if (ui.errorBox) ui.errorBox.textContent = message;
       ui.statusPill.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Not found`;
@@ -399,6 +907,8 @@
       ui.statusPill.className = `status-pill ${bgClass} ${txtClass}`;
       ui.statusPill.innerHTML = `<i class="bi bi-circle-fill"></i> ${label}`;
       ui.invoiceStatus.textContent = `Status: ${label}`;
+      ui.statusText.textContent = label;
+      ui.methodText.textContent = "Mobile Money";
     }
 
     async function loadInvoice() {
@@ -430,49 +940,62 @@
       const remaining = Math.max(0, safeNumber(invoice.balance ?? total - paid));
 
       const phone = String(invoice.customerPhone || "—");
-      const whatsappRaw = String(invoice.customerWhatsapp || shopWhatsapp || shopPhone || "");
-      const whatsappDigits = normalizePhone(whatsappRaw) || digitsOnly(shopPhone) || "252617125558";
+      const customerName = String(invoice.customerName || "Customer");
+      const invoiceNo = String(invoice.invoiceNumber || invoice.id || invoiceId);
       const shopDigits = digitsOnly(shopPhone) || "617125558";
       const ussd = buildUssd(remaining, shopDigits);
       const telLink = telLinkFromUssd(ussd);
+      const whatsappDigits = normalizePhoneForWhatsApp(invoice.customerWhatsapp || shopWhatsapp || shopPhone || "252617125558") || "252617125558";
       const payPage = `https://waasuge-shop.netlify.app/pay?id=${encodeURIComponent(invoiceId)}`;
 
       ui.shopName.textContent = shopName || "Waasuge Electronics";
-      ui.customerName.textContent = invoice.customerName || "Customer";
+      ui.welcomeText.textContent = `Welcome ${customerName}! Your invoice payment page is ready.`;
+      ui.helloTitle.textContent = `Hello ${customerName} 👋`;
+      ui.helloText.textContent = "Thank you for choosing Waasuge Electronics. Please review your invoice and complete payment easily.";
+      ui.customerName.textContent = customerName;
       ui.customerPhone.textContent = phone;
-      ui.invoiceNo.textContent = invoice.invoiceNumber || invoice.id || invoiceId;
+      ui.invoiceNo.textContent = invoiceNo;
+      ui.invoiceText.textContent = invoiceNo;
       ui.totalValue.textContent = fmtMoney(total);
       ui.paidValue.textContent = fmtMoney(paid);
       ui.remainingValue.textContent = fmtMoney(remaining);
-      ui.ussdBox.textContent = `Habka Lacag Bixinta:\n${ussd}`;
-      ui.helpText.textContent = `Need help? Call ${shopPhone} or WhatsApp us.`;
+      ui.customerBox.textContent = customerName;
+      ui.invoiceBox.textContent = invoiceNo;
+      ui.totalBox.textContent = fmtMoney(total);
+      ui.remainingBox.textContent = fmtMoney(remaining);
+      ui.pageNote.textContent = "Tap Pay Now to open the dialer with the exact remaining balance.";
+      ui.footerText.textContent = `Invoice page: ${payPage}`;
 
-      setStatus(invoice.paymentStatus || (remaining <= 0 ? "paid" : "partial"));
-      ui.loadingText?.classList.add("d-none");
-      ui.errorBox?.classList.add("d-none");
+      const status = invoice.paymentStatus || (remaining <= 0 ? "paid" : "partial");
+      setStatus(status);
 
-      if (remaining > 0) {
-        ui.payNowLink.href = telLink;
-        ui.payNowLink.classList.remove("opacity-50");
-        ui.payNowLink.style.pointerEvents = "auto";
+      const whatsappMessage = encodeURIComponent(
+        `Hello Waasuge Electronics, I opened invoice ${invoiceNo}. Remaining balance is ${fmtMoney(remaining)}. Please help me pay.`
+      );
 
-        ui.whatsappLink.href = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-          `Hello Waasuge Electronics, I opened invoice ${invoice.invoiceNumber || invoiceId}. Remaining balance is ${fmtMoney(remaining)}. Please help me pay.`
-        )}`;
-      } else {
-        ui.payNowLink.href = "#";
-        ui.payNowLink.classList.add("opacity-50");
-        ui.payNowLink.style.pointerEvents = "none";
+      ui.payNowLink.href = telLink;
+      ui.ussdLink.href = telLink;
+      ui.ussdLink.textContent = ussd;
+
+      ui.whatsappLink.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
+      ui.dockWhatsApp.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
+
+      ui.visitLink.href = "https://waasuge-shop.netlify.app/";
+      ui.dockVisit.href = "https://waasuge-shop.netlify.app/";
+
+      if (remaining <= 0) {
         ui.payNowLink.innerHTML = `<i class="bi bi-check2-circle"></i> Paid`;
-        ui.whatsappLink.href = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-          `Hello Waasuge Electronics, invoice ${invoice.invoiceNumber || invoiceId} is already paid.`
-        )}`;
+        ui.payNowLink.href = "#";
+        ui.payNowLink.style.pointerEvents = "none";
+        ui.payNowLink.style.opacity = ".78";
+        ui.ussdLink.textContent = "Invoice already paid";
+        ui.ussdLink.href = "#";
       }
 
-      ui.callPrimary.href = `tel:${shopPhone}`;
-      ui.callAlt.href = `tel:0617125558`;
-      ui.footerNote.textContent = `Invoice link: ${payPage}`;
-      document.title = `${invoice.invoiceNumber || invoiceId} | Waasuge Electronics`;
+      document.title = `${invoiceNo} | Waasuge Electronics`;
+
+      ui.loadingRow?.classList.add("d-none");
+      ui.errorBox?.classList.add("d-none");
     }
 
     loadInvoice().catch((error) => {
@@ -481,3 +1004,4 @@
   </script>
 </body>
 </html>
+
