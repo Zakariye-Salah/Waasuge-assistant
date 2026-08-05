@@ -1036,353 +1036,583 @@
     </div>
   </div>
 
-  <script type="module">
-    import { getInvoices, getRepairs, getPayments, getSettingValue, safeNumber, toArray, normalizeText } from "./js/database.js";
+<script type="module">
+  import { getInvoices, getRepairs, getPayments, safeNumber, toArray, normalizeText } from "./js/database.js";
 
-    const params = new URLSearchParams(location.search);
-    const invoiceId = String(params.get("id") || "").trim();
+  const params = new URLSearchParams(location.search);
+  const invoiceId = String(params.get("id") || params.get("invoice") || params.get("invoiceId") || "").trim();
 
-    const el = (id) => document.getElementById(id);
+  const el = (id) => document.getElementById(id);
 
-    const ui = {
-      shopName: el("shopName"),
-      welcomeText: el("welcomeText"),
-      statusPill: el("statusPill"),
-      customerName: el("customerName"),
-      customerPhone: el("customerPhone"),
-      invoiceNo: el("invoiceNo"),
-      invoiceStatus: el("invoiceStatus"),
-      totalValue: el("totalValue"),
-      paidValue: el("paidValue"),
-      remainingValue: el("remainingValue"),
-      customerBox: el("customerBox"),
-      invoiceBox: el("invoiceBox"),
-      totalBox: el("totalBox"),
-      remainingBox: el("remainingBox"),
-      payNowLink: el("payNowLink"),
-      ussdLink: el("ussdLink"),
-      visitLink: el("visitLink"),
-      dockWhatsApp: el("dockWhatsApp"),
-      dockVisit: el("dockVisit"),
-      statusText: el("statusText"),
-      invoiceText: el("invoiceText"),
-      methodText: el("methodText"),
-      helloTitle: el("helloTitle"),
-      helloText: el("helloText"),
-      pageNote: el("pageNote"),
-      footerText: el("footerText"),
-      loadingRow: el("loadingRow"),
-      errorBox: el("errorBox"),
-      itemsList: el("itemsList"),
-      historyBody: el("historyBody"),
-      historyCards: el("historyCards"),
-      invoiceHistoryBody: el("invoiceHistoryBody"),
-      invoiceHistoryCards: el("invoiceHistoryCards"),
-      repairHistoryBody: el("repairHistoryBody"),
-      repairHistoryCards: el("repairHistoryCards"),
-      paymentHistoryBody: el("paymentHistoryBody"),
-      paymentHistoryCards: el("paymentHistoryCards"),
+  const ui = {
+    shopName: el("shopName"),
+    welcomeText: el("welcomeText"),
+    statusPill: el("statusPill"),
+    customerName: el("customerName"),
+    customerPhone: el("customerPhone"),
+    invoiceNo: el("invoiceNo"),
+    invoiceStatus: el("invoiceStatus"),
+    totalValue: el("totalValue"),
+    paidValue: el("paidValue"),
+    remainingValue: el("remainingValue"),
+    customerBox: el("customerBox"),
+    invoiceBox: el("invoiceBox"),
+    totalBox: el("totalBox"),
+    remainingBox: el("remainingBox"),
+    payNowLink: el("payNowLink"),
+    ussdLink: el("ussdLink"),
+    visitLink: el("visitLink"),
+    dockWhatsApp: el("dockWhatsApp"),
+    dockVisit: el("dockVisit"),
+    statusText: el("statusText"),
+    invoiceText: el("invoiceText"),
+    methodText: el("methodText"),
+    helloTitle: el("helloTitle"),
+    helloText: el("helloText"),
+    pageNote: el("pageNote"),
+    footerText: el("footerText"),
+    loadingRow: el("loadingRow"),
+    errorBox: el("errorBox"),
+    itemsList: el("itemsList"),
+    historyBody: el("historyBody"),
+    historyCards: el("historyCards"),
+    invoiceHistoryBody: el("invoiceHistoryBody"),
+    invoiceHistoryCards: el("invoiceHistoryCards"),
+    repairHistoryBody: el("repairHistoryBody"),
+    repairHistoryCards: el("repairHistoryCards"),
+    paymentHistoryBody: el("paymentHistoryBody"),
+    paymentHistoryCards: el("paymentHistoryCards"),
+  };
+
+  let currentInvoice = null;
+
+  function money(value) {
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(safeNumber(value, 0));
+  }
+
+  function fmtMoney(value) {
+    return `$${money(value)}`;
+  }
+
+  function digitsOnly(value) {
+    return String(value ?? "").replace(/\D/g, "");
+  }
+
+  function normalizePhoneForWhatsApp(value) {
+    let d = digitsOnly(value);
+    if (!d) return "";
+    if (d.startsWith("00")) d = d.slice(2);
+    if (d.startsWith("0")) d = `252${d.slice(1)}`;
+    if (!d.startsWith("252") && d.length === 9) d = `252${d}`;
+    return d;
+  }
+
+  function formatDateTime(value) {
+    const ts = safeNumber(value);
+    if (!ts) return "—";
+    return new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date(ts));
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function setLoading(loading) {
+    ui.loadingRow?.classList.toggle("d-none", !loading);
+  }
+
+  function showError(message) {
+    setLoading(false);
+    if (ui.errorBox) {
+      ui.errorBox.classList.remove("d-none");
+      ui.errorBox.textContent = message;
+    }
+    if (ui.statusPill) ui.statusPill.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Not found`;
+  }
+
+  function setStatus(status) {
+    const text = String(status || "").toLowerCase();
+    const map = {
+      paid: ["bg-success", "text-white", "Paid"],
+      partial: ["bg-warning", "text-dark", "Partial"],
+      unpaid: ["bg-danger", "text-white", "Unpaid"]
     };
-
-    function money(value) {
-      return new Intl.NumberFormat("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(safeNumber(value, 0));
-    }
-
-    function fmtMoney(value) {
-      return `$${money(value)}`;
-    }
-
-    function digitsOnly(value) {
-      return String(value ?? "").replace(/\D/g, "");
-    }
-
-    function normalizePhoneForWhatsApp(value) {
-      const d = digitsOnly(value);
-      if (!d) return "";
-      if (d.startsWith("0")) return `252${d.slice(1)}`;
-      return d;
-    }
-
-    function buildUssd(balance, shopDigits) {
-      const amount = Math.max(0, Math.round(Number(balance) || 0));
-      return `*712*${shopDigits}*${amount}#`;
-    }
-
-    function telLinkFromUssd(ussd) {
-      return `tel:${String(ussd).replace(/#/g, "%23")}`;
-    }
-
-    function showError(message) {
-      ui.loadingRow?.classList.add("d-none");
-      ui.errorBox?.classList.remove("d-none");
-      if (ui.errorBox) ui.errorBox.textContent = message;
-      ui.statusPill.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Not found`;
-    }
-
-    function setStatus(status) {
-      const text = String(status || "").toLowerCase();
-      const map = {
-        paid: ["bg-success", "text-white", "Paid"],
-        partial: ["bg-warning", "text-dark", "Partial"],
-        unpaid: ["bg-danger", "text-white", "Unpaid"]
-      };
-      const [bgClass, txtClass, label] = map[text] || ["bg-secondary", "text-white", "Unknown"];
+    const [bgClass, txtClass, label] = map[text] || ["bg-secondary", "text-white", "Unknown"];
+    if (ui.statusPill) {
       ui.statusPill.className = `status-pill ${bgClass} ${txtClass}`;
       ui.statusPill.innerHTML = `<i class="bi bi-circle-fill"></i> ${label}`;
-      
-      if (ui.statusText) {
-    ui.statusText.textContent = label;
-}
-
-if (ui.methodText) {
-    ui.methodText.textContent = "Mobile Money";
-}
-
-if (ui.invoiceText) {
-    ui.invoiceText.textContent = invoiceNo;
-}
     }
+    if (ui.statusText) ui.statusText.textContent = label;
+    if (ui.methodText) ui.methodText.textContent = "Mobile Money";
+    if (ui.invoiceStatus) ui.invoiceStatus.textContent = label;
+  }
 
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
-    }
+  function getShopName(invoice) {
+    return String(invoice?.shopName || invoice?.businessName || invoice?.companyName || "Waasuge Electronics").trim() || "Waasuge Electronics";
+  }
 
-    function normalizeHistoryItem(item, type) {
-      return {
-        type,
-        ref: item?.invoiceNumber || item?.repairNumber || item?.relatedNumber || item?.id || "—",
-        title: type === "Invoice"
-          ? (item?.items?.length ? item.items.map((x) => x?.name || x?.productName || "Item").join(", ") : "Invoice")
+  function getShopDigits(invoice) {
+    const raw = invoice?.shopPhone || invoice?.businessPhone || invoice?.companyPhone || "617125558";
+    const digits = digitsOnly(raw);
+    return digits || "617125558";
+  }
+
+  function buildUssd(balance, shopDigits) {
+    const amount = Math.max(0, Math.round(Number(balance) || 0));
+    return `*712*${shopDigits}*${amount}#`;
+  }
+
+  function telLinkFromUssd(ussd) {
+    return `tel:${String(ussd).replace(/#/g, "%23")}`;
+  }
+
+  function buildPayMessage(invoice, historySummary) {
+    const total = safeNumber(invoice?.finalTotal ?? invoice?.total ?? invoice?.amount ?? 0);
+    const paid = safeNumber(invoice?.paidAmount ?? 0);
+    const remaining = Math.max(0, safeNumber(invoice?.balance ?? total - paid));
+    const invoiceNo = invoice?.invoiceNumber || invoice?.invoiceNo || invoice?.id || "—";
+    const customerName = invoice?.customerName || "Customer";
+    const customerPhone = invoice?.customerPhone || invoice?.phone || "—";
+    const lines = [
+      `Asc ${customerName}`,
+      `Phone: ${customerPhone}`,
+      `Invoice No: ${invoiceNo}`,
+      `Total: ${fmtMoney(total)}`,
+      `Paid: ${fmtMoney(paid)}`,
+      `Remaining: ${fmtMoney(remaining)}`,
+      historySummary ? `History items: ${historySummary}` : "",
+      `Pay link: ${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(invoice?.id || invoiceNo)}`,
+      `Waasuge Electronics`
+    ];
+    return lines.filter(Boolean).join("\n");
+  }
+
+  function makeContactLinks(invoice, historySummary) {
+    const phone = digitsOnly(invoice?.customerPhone || invoice?.phone || "");
+    const whatsapp = normalizePhoneForWhatsApp(invoice?.customerWhatsapp || invoice?.whatsapp || invoice?.customerPhone || invoice?.phone || "");
+    const msg = encodeURIComponent(buildPayMessage(invoice, historySummary));
+    return {
+      whatsappUrl: whatsapp ? `https://wa.me/${whatsapp}?text=${msg}` : `https://wa.me/?text=${msg}`,
+      smsUrl: phone ? `sms:${phone}?body=${msg}` : `sms:?body=${msg}`
+    };
+  }
+
+  function normalizeKey(record = {}) {
+    return normalizeText(
+      record?.customerId ||
+      record?.clientId ||
+      record?.customerPhone ||
+      record?.phone ||
+      record?.phoneNumber ||
+      record?.whatsapp ||
+      record?.customerWhatsapp ||
+      record?.customerName ||
+      record?.fullName ||
+      record?.name ||
+      ""
+    );
+  }
+
+  function sameCustomer(seed, candidate) {
+    const seedId = String(seed?.customerId || seed?.customerID || "").trim();
+    const candidateId = String(candidate?.customerId || candidate?.customerID || "").trim();
+    if (seedId && candidateId && seedId === candidateId) return true;
+
+    const seedPhone = normalizeKey({
+      customerPhone: seed?.customerPhone || seed?.phone || seed?.whatsapp || seed?.customerWhatsapp
+    });
+    const candidatePhone = normalizeKey({
+      customerPhone: candidate?.customerPhone || candidate?.phone || candidate?.whatsapp || candidate?.customerWhatsapp
+    });
+    if (seedPhone && candidatePhone && seedPhone === candidatePhone) return true;
+
+    const seedName = normalizeText(seed?.customerName || seed?.name || seed?.fullName || "");
+    const candidateName = normalizeText(candidate?.customerName || candidate?.name || candidate?.fullName || "");
+    if (seedName && candidateName && seedName === candidateName) return true;
+
+    return false;
+  }
+
+  function normalizeHistoryItem(item, type) {
+    const total = safeNumber(item?.finalTotal ?? item?.total ?? item?.amount ?? item?.price ?? 0);
+    const paid = safeNumber(item?.paidAmount ?? item?.paidNow ?? item?.paid ?? 0);
+    const remaining = safeNumber(item?.balance ?? item?.totalRemaining ?? Math.max(0, total - paid));
+    const stamp = safeNumber(item?.createdAt ?? item?.updatedAt ?? item?.date ?? Date.now());
+    return {
+      type,
+      ref: item?.invoiceNumber || item?.repairNumber || item?.relatedNumber || item?.paymentNumber || item?.id || "—",
+      title:
+        type === "Invoice"
+          ? (Array.isArray(item?.items) && item.items.length
+              ? item.items.map((x) => x?.name || x?.productName || "Item").join(", ")
+              : (item?.notes || item?.paymentStatus || "Invoice"))
           : type === "Repair"
             ? `${item?.deviceName || item?.device || "Device"} · ${item?.problem || item?.issue || "Repair"}`
             : (item?.notes || "Payment"),
-        phone: item?.customerPhone || item?.phone || "—",
-        whatsapp: item?.customerWhatsapp || item?.whatsapp || item?.customerPhone || item?.phone || "—",
-        sender: item?.senderNumber || item?.moneySenderNumber || "—",
-        paymentType: item?.paymentType || "Mobile Money",
-        paymentProvider: item?.paymentProvider || item?.cashCurrency || "—",
-        paid: safeNumber(item?.paidAmount ?? item?.paidNow ?? item?.amount ?? 0),
-        remaining: safeNumber(item?.balance ?? item?.totalRemaining ?? 0),
-        amount: safeNumber(item?.finalTotal ?? item?.total ?? item?.amount ?? item?.price ?? 0),
-        date: item?.createdAt ? new Date(item.createdAt).toLocaleString() : "—",
-        stamp: safeNumber(item?.createdAt ?? item?.updatedAt ?? 0),
-        notes: item?.notes || "—",
-        status: item?.paymentStatus || item?.status || "—",
-      };
+      phone: item?.customerPhone || item?.phone || "—",
+      whatsapp: item?.customerWhatsapp || item?.whatsapp || item?.customerPhone || item?.phone || "—",
+      sender: item?.senderNumber || item?.moneySenderNumber || "—",
+      paymentType: item?.paymentType || "Mobile Money",
+      paymentProvider: item?.paymentProvider || item?.cashCurrency || "—",
+      paid,
+      remaining,
+      amount: total,
+      date: formatDateTime(stamp),
+      stamp,
+      notes: item?.notes || "—",
+      status: item?.paymentStatus || item?.status || "—",
+    };
+  }
+
+  function buildHistory(invoices, repairs, payments, seed) {
+    const invoiceRows = toArray(invoices)
+      .filter((item) => !item?.isDeleted && !item?.deleted && sameCustomer(seed, item))
+      .map((item) => normalizeHistoryItem(item, "Invoice"));
+
+    const repairRows = toArray(repairs)
+      .filter((item) => !item?.isDeleted && !item?.deleted && sameCustomer(seed, item))
+      .map((item) => normalizeHistoryItem(item, "Repair"));
+
+    const paymentRows = toArray(payments)
+      .filter((item) => !item?.isDeleted && !item?.deleted && sameCustomer(seed, item))
+      .map((item) => normalizeHistoryItem(item, "Payment"));
+
+    const combined = [...invoiceRows, ...repairRows, ...paymentRows].sort((a, b) => b.stamp - a.stamp);
+
+    const totalSpent = [...invoiceRows, ...repairRows].reduce((sum, row) => sum + safeNumber(row.amount), 0);
+    const totalPaid = [...invoiceRows, ...repairRows].reduce((sum, row) => sum + safeNumber(row.paid), 0);
+    const totalRemaining = [...invoiceRows, ...repairRows].reduce((sum, row) => sum + Math.max(0, safeNumber(row.remaining)), 0);
+
+    const summary = {
+      customerName: seed?.customerName || seed?.name || seed?.fullName || "Customer",
+      phone: seed?.customerPhone || seed?.phone || seed?.whatsapp || seed?.customerWhatsapp || "—",
+      invoiceCount: invoiceRows.length,
+      repairCount: repairRows.length,
+      paymentCount: paymentRows.length,
+      totalSpent: fmtMoney(totalSpent),
+      totalPaid: fmtMoney(totalPaid),
+      totalRemaining: fmtMoney(totalRemaining),
+      historyCount: combined.length,
+      lastVisit: combined[0]?.date || "—"
+    };
+
+    return { summary, invoiceRows, repairRows, paymentRows, combined };
+  }
+
+  function renderSummary(invoice, history) {
+    const total = safeNumber(invoice?.finalTotal ?? invoice?.total ?? invoice?.amount ?? 0);
+    const paid = safeNumber(invoice?.paidAmount ?? 0);
+    const remaining = Math.max(0, safeNumber(invoice?.balance ?? total - paid));
+    const invoiceNo = invoice?.invoiceNumber || invoice?.invoiceNo || invoice?.id || "—";
+    const customerName = invoice?.customerName || invoice?.name || "—";
+    const customerPhone = invoice?.customerPhone || invoice?.phone || "—";
+
+    if (ui.shopName) ui.shopName.textContent = getShopName(invoice);
+    if (ui.welcomeText) ui.welcomeText.textContent = invoice?.notes || "Welcome! Your invoice payment page is ready.";
+    if (ui.customerName) ui.customerName.textContent = customerName;
+    if (ui.customerPhone) ui.customerPhone.textContent = customerPhone;
+    if (ui.invoiceNo) ui.invoiceNo.textContent = invoiceNo;
+    if (ui.totalValue) ui.totalValue.textContent = fmtMoney(total);
+    if (ui.paidValue) ui.paidValue.textContent = fmtMoney(paid);
+    if (ui.remainingValue) ui.remainingValue.textContent = fmtMoney(remaining);
+    if (ui.customerBox) ui.customerBox.textContent = customerName;
+    if (ui.invoiceBox) ui.invoiceBox.textContent = invoiceNo;
+    if (ui.totalBox) ui.totalBox.textContent = fmtMoney(total);
+    if (ui.remainingBox) ui.remainingBox.textContent = fmtMoney(remaining);
+    if (ui.helloTitle) ui.helloTitle.textContent = `Hello ${customerName || "👋"}`;
+    if (ui.helloText) ui.helloText.textContent = "Please review your invoice details and use the buttons below to continue by WhatsApp, SMS, or phone dialer.";
+
+    setStatus(invoice?.paymentStatus);
+
+    const shopDigits = getShopDigits(invoice);
+    const ussd = buildUssd(remaining, shopDigits);
+
+    if (ui.payNowLink) {
+      ui.payNowLink.href = telLinkFromUssd(ussd);
+      ui.payNowLink.setAttribute("aria-label", `Dial ${ussd}`);
     }
 
-    function isSameCustomer(invoice, seed) {
-      const aPhone = normalizeText(invoice?.customerPhone || invoice?.phone || "");
-      const bPhone = normalizeText(seed?.customerPhone || seed?.phone || "");
-      const aName = normalizeText(invoice?.customerName || "");
-      const bName = normalizeText(seed?.customerName || "");
-      if (aPhone && bPhone && aPhone === bPhone) return true;
-      if (aName && bName && aName === bName) return true;
-      return false;
+    if (ui.ussdLink) {
+      ui.ussdLink.textContent = ussd;
+      ui.ussdLink.href = telLinkFromUssd(ussd);
     }
 
-    function renderItems(invoice) {
-    if (!itemsList) return;
+    const contacts = makeContactLinks(invoice, history?.historyCount || 0);
+    if (ui.dockWhatsApp) ui.dockWhatsApp.href = contacts.whatsappUrl;
+    if (ui.visitLink) ui.visitLink.href = "https://waasuge-shop.netlify.app/";
+    if (ui.dockVisit) ui.dockVisit.href = "https://waasuge-shop.netlify.app/";
+    if (ui.pageNote) ui.pageNote.textContent = "Tap Pay Now to open the dialer with the exact remaining balance.";
+    if (ui.footerText) ui.footerText.textContent = "Waasuge Electronics";
+  }
 
+  function renderItems(invoice) {
+    if (!ui.itemsList) return;
     const items = Array.isArray(invoice?.items)
-        ? invoice.items
-        : Object.values(invoice?.items || {});
+      ? invoice.items
+      : toArray(invoice?.items);
 
     if (!items.length) {
-        itemsList.innerHTML = `
-            <div class="text-center text-muted py-4">
-                No items found.
-            </div>
-        `;
-        return;
+      ui.itemsList.innerHTML = `<div class="text-center text-muted py-4">No items found.</div>`;
+      return;
     }
 
-    itemsList.innerHTML = items.map(item => {
-
-        const qty = Number(item.qty || 1);
-        const price = Number(item.price ?? item.unitPrice ?? 0);
-        const total = qty * price;
-
-        return `
-            <div class="item-row">
-
-                <div>
-
-                    <div class="fw-bold">
-                        ${item.name || item.productName || "Item"}
-                    </div>
-
-                    <small class="text-muted d-block">
-                        Qty: ${qty}
-                    </small>
-
-                    <small class="text-muted d-block">
-                        Price: ${formatCurrency(price)}
-                    </small>
-
-                </div>
-
-                <div class="fw-bold">
-                    ${formatCurrency(total)}
-                </div>
-
-            </div>
-        `;
-
+    ui.itemsList.innerHTML = items.map((item) => {
+      const qty = safeNumber(item?.qty ?? item?.quantity ?? 1, 1);
+      const price = safeNumber(item?.price ?? item?.unitPrice ?? 0);
+      const total = qty * price;
+      return `
+        <div class="item-row">
+          <div class="min-w-0">
+            <div class="fw-bold text-truncate">${escapeHtml(item?.name || item?.productName || "Item")}</div>
+            <small class="text-muted d-block">Qty: ${qty}</small>
+            <small class="text-muted d-block">Price: ${fmtMoney(price)}</small>
+          </div>
+          <div class="fw-bold text-nowrap">${fmtMoney(total)}</div>
+        </div>
+      `;
     }).join("");
-}
- 
-function renderHistory(invoice) {
+  }
 
-if (!historyList) return;
+  function rowClass(type) {
+    return type === "Invoice" ? "bg-soft-primary text-primary-soft" : type === "Repair" ? "bg-soft-success text-success-soft" : "bg-soft-warning text-warning-soft";
+  }
 
-const customerPhone = String(
-    invoice.whatsapp ||
-    invoice.phone ||
-    ""
-).trim();
+  function renderAllHistory(entries) {
+    if (ui.historyBody) {
+      ui.historyBody.innerHTML = entries.length
+        ? entries.map((row) => `
+          <tr>
+            <td><span class="badge ${rowClass(row.type)}">${row.type}</span></td>
+            <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+            <td>${escapeHtml(row.title)}</td>
+            <td>${escapeHtml(row.phone)}</td>
+            <td>${escapeHtml(row.whatsapp)}</td>
+            <td>${escapeHtml(row.sender)}</td>
+            <td>${escapeHtml(row.paymentType)}</td>
+            <td>${escapeHtml(row.paymentProvider)}</td>
+            <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+            <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+            <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+            <td class="text-nowrap">${escapeHtml(row.date)}</td>
+            <td>${escapeHtml(row.notes)}</td>
+          </tr>`).join("")
+        : `<tr><td colspan="13" class="text-center text-muted py-4">No history found for this customer.</td></tr>`;
+    }
 
-const customerName = String(
-    invoice.customerName ||
-    invoice.name ||
-    ""
-).trim();
+    if (ui.historyCards) {
+      ui.historyCards.innerHTML = entries.length
+        ? entries.map((row) => `
+          <div class="history-card-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="min-w-0">
+                <div class="k">${escapeHtml(row.type)}</div>
+                <div class="v text-truncate">${escapeHtml(row.ref)}</div>
+              </div>
+              <div class="fw-bold text-nowrap">${fmtMoney(row.amount)}</div>
+            </div>
+            <div class="small text-muted mt-2">${escapeHtml(row.title)}</div>
+            <div class="small mt-2"><strong>Phone:</strong> ${escapeHtml(row.phone)}</div>
+            <div class="small"><strong>WhatsApp:</strong> ${escapeHtml(row.whatsapp)}</div>
+            <div class="small"><strong>Paid:</strong> ${fmtMoney(row.paid)} · <strong>Remaining:</strong> ${fmtMoney(row.remaining)}</div>
+            <div class="small"><strong>Date:</strong> ${escapeHtml(row.date)}</div>
+          </div>`).join("")
+        : `<div class="small-note">No history found.</div>`;
+    }
+  }
 
-const invoices = getInvoices();
+  function renderTypedHistory(entries, tableBody, cardBody, emptyMessage, columns) {
+    if (tableBody) {
+      tableBody.innerHTML = entries.length
+        ? entries.map(columns).join("")
+        : `<tr><td colspan="${emptyMessage.cols}" class="text-center text-muted py-4">${escapeHtml(emptyMessage.text)}</td></tr>`;
+    }
+    if (cardBody) {
+      cardBody.innerHTML = entries.length
+        ? entries.map(emptyMessage.card).join("")
+        : `<div class="small-note">${escapeHtml(emptyMessage.text)}</div>`;
+    }
+  }
 
-const history = invoices.filter(inv => {
-
-    const phone = String(
-        inv.whatsapp ||
-        inv.phone ||
-        ""
-    ).trim();
-
-    const name = String(
-        inv.customerName ||
-        inv.name ||
-        ""
-    ).trim();
-
-    return (
-        phone === customerPhone ||
-        name.toLowerCase() === customerName.toLowerCase()
+  function renderTypedSections(history) {
+    renderTypedHistory(
+      history.invoiceRows,
+      ui.invoiceHistoryBody,
+      ui.invoiceHistoryCards,
+      {
+        text: "No invoice history found.",
+        cols: 7,
+        card: (row) => `
+          <div class="history-card-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="min-w-0">
+                <div class="k">Invoice</div>
+                <div class="v text-truncate">${escapeHtml(row.ref)}</div>
+              </div>
+              <div class="fw-bold text-nowrap">${fmtMoney(row.amount)}</div>
+            </div>
+            <div class="small mt-2"><strong>Status:</strong> ${escapeHtml(row.status)}</div>
+            <div class="small"><strong>Phone:</strong> ${escapeHtml(row.phone)}</div>
+            <div class="small"><strong>Paid:</strong> ${fmtMoney(row.paid)} · <strong>Remaining:</strong> ${fmtMoney(row.remaining)}</div>
+            <div class="small"><strong>Date:</strong> ${escapeHtml(row.date)}</div>
+          </div>`,
+      },
+      (row) => `
+        <tr>
+          <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+          <td>${escapeHtml(row.phone)}</td>
+          <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+          <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+          <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+          <td>${escapeHtml(row.status)}</td>
+          <td class="text-nowrap">${escapeHtml(row.date)}</td>
+        </tr>`
     );
 
-});
-
-history.sort((a, b) =>
-    new Date(b.date || 0) -
-    new Date(a.date || 0)
-);
-
-if (!history.length) {
-
-    historyList.innerHTML = `
-        <div class="text-center text-muted py-3">
-            No history found.
-        </div>
-    `;
-
-    return;
-
-}
-
-historyList.innerHTML = history.map(inv => `
-
-    <div class="history-item">
-
-        <div>
-
-            <div class="fw-bold">
-                ${inv.invoiceNumber}
+    renderTypedHistory(
+      history.repairRows,
+      ui.repairHistoryBody,
+      ui.repairHistoryCards,
+      {
+        text: "No repair history found.",
+        cols: 9,
+        card: (row) => `
+          <div class="history-card-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="min-w-0">
+                <div class="k">Repair</div>
+                <div class="v text-truncate">${escapeHtml(row.ref)}</div>
+              </div>
+              <div class="fw-bold text-nowrap">${fmtMoney(row.amount)}</div>
             </div>
+            <div class="small mt-2"><strong>Device:</strong> ${escapeHtml(row.title)}</div>
+            <div class="small"><strong>Phone:</strong> ${escapeHtml(row.phone)}</div>
+            <div class="small"><strong>Status:</strong> ${escapeHtml(row.status)}</div>
+            <div class="small"><strong>Date:</strong> ${escapeHtml(row.date)}</div>
+          </div>`,
+      },
+      (row) => `
+        <tr>
+          <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+          <td>${escapeHtml(row.phone)}</td>
+          <td>${escapeHtml(row.title.split(" · ")[0] || "—")}</td>
+          <td>${escapeHtml(row.title.split(" · ")[1] || "—")}</td>
+          <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+          <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+          <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+          <td>${escapeHtml(row.status)}</td>
+          <td class="text-nowrap">${escapeHtml(row.date)}</td>
+        </tr>`
+    );
 
-            <small class="text-muted">
-                ${formatDate(inv.date)}
-            </small>
-
-        </div>
-
-        <div class="text-end">
-
-            <div class="fw-bold">
-                ${formatCurrency(inv.total)}
+    renderTypedHistory(
+      history.paymentRows,
+      ui.paymentHistoryBody,
+      ui.paymentHistoryCards,
+      {
+        text: "No payment history found.",
+        cols: 8,
+        card: (row) => `
+          <div class="history-card-item">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="min-w-0">
+                <div class="k">Payment</div>
+                <div class="v text-truncate">${escapeHtml(row.ref)}</div>
+              </div>
+              <div class="fw-bold text-nowrap">${fmtMoney(row.paid || row.amount)}</div>
             </div>
+            <div class="small mt-2"><strong>Phone:</strong> ${escapeHtml(row.phone)}</div>
+            <div class="small"><strong>Type:</strong> ${escapeHtml(row.paymentType)}</div>
+            <div class="small"><strong>Provider:</strong> ${escapeHtml(row.paymentProvider)}</div>
+            <div class="small"><strong>Date:</strong> ${escapeHtml(row.date)}</div>
+          </div>`,
+      },
+      (row) => `
+        <tr>
+          <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+          <td>${escapeHtml(row.phone)}</td>
+          <td class="text-nowrap">${fmtMoney(row.paid || row.amount)}</td>
+          <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+          <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+          <td>${escapeHtml(row.paymentType)}</td>
+          <td>${escapeHtml(row.paymentProvider)}</td>
+          <td class="text-nowrap">${escapeHtml(row.date)}</td>
+        </tr>`
+    );
+  }
 
-            <small class="${statusColor(inv.status)}">
-                ${inv.status}
-            </small>
-
-        </div>
-
-    </div>
-
-`).join("");
-
-}
-    function setHistoryTab(tab) {
-      document.querySelectorAll(".history-tab").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.historyTab === tab);
-      });
-      document.querySelectorAll(".history-pane").forEach((pane) => {
-        pane.classList.toggle("active", pane.dataset.historyPane === tab);
-      });
-    }
-
-    async function loadInvoice(invoiceNo) {
-
-await waitForDatabase();
-
-const invoices = getInvoices();
-
-const invoice = invoices.find(inv =>
-
-    String(inv.invoiceNumber || "").trim() === invoiceNo ||
-
-    String(inv.id || "").trim() === invoiceNo ||
-
-    String(inv.invoiceNo || "").trim() === invoiceNo
-
-);
-
-if (!invoice) {
-
-    document.body.innerHTML = `
-        <div class="container py-5 text-center">
-
-            <h3>Invoice Not Found</h3>
-
-            <p class="text-muted">
-                ${invoiceNo}
-            </p>
-
-        </div>
-    `;
-
-    return;
-}
-
-currentInvoice = invoice;
-
-renderInvoice(invoice);
-
-renderItems(invoice);
-
-renderHistory(invoice);
-
-}
-   
-document.querySelectorAll("[data-history-tab]").forEach((btn) => {
-      btn.addEventListener("click", () => setHistoryTab(btn.dataset.historyTab));
+  function setHistoryTab(tab) {
+    document.querySelectorAll(".history-tab").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.historyTab === tab);
     });
+    document.querySelectorAll(".history-pane").forEach((pane) => {
+      pane.classList.toggle("active", pane.dataset.historyPane === tab);
+    });
+  }
 
-    loadInvoice().catch((error) => {
+  async function loadInvoice() {
+    setLoading(true);
+
+    try {
+      const [invoicesRaw, repairsRaw, paymentsRaw] = await Promise.all([
+        getInvoices().catch(() => []),
+        getRepairs().catch(() => []),
+        getPayments().catch(() => [])
+      ]);
+
+      const invoices = toArray(invoicesRaw);
+      const repairs = toArray(repairsRaw);
+      const payments = toArray(paymentsRaw);
+
+      const invoice = invoices.find((inv) => {
+        const keys = [
+          inv?.id,
+          inv?.invoiceNumber,
+          inv?.invoiceNo,
+          inv?.relatedNumber
+        ].map((v) => String(v || "").trim());
+        return keys.includes(invoiceId);
+      });
+
+      if (!invoice) {
+        showError(`Invoice not found: ${invoiceId || "missing id"}`);
+        return;
+      }
+
+      currentInvoice = invoice;
+      const history = buildHistory(invoices, repairs, payments, invoice);
+
+      renderSummary(invoice, history.summary);
+      renderItems(invoice);
+      renderAllHistory(history.combined);
+      renderTypedSections(history);
+
+      setHistoryTab("all");
+      setLoading(false);
+    } catch (error) {
       showError(error?.message || "Could not load invoice.");
-    });
-  </script>
+    }
+  }
+
+  document.querySelectorAll("[data-history-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => setHistoryTab(btn.dataset.historyTab));
+  });
+
+  loadInvoice();
+</script>
 </body>
 </html>
