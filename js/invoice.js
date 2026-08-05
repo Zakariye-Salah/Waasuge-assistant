@@ -1551,9 +1551,11 @@ function markInvoiceSent(invoice, channel) {
 }
 
 
+
+
 function getInvoicePayUrl(invoice) {
   const invoiceKey = encodeURIComponent(String(invoice?.invoiceNumber || invoice?.id || "").trim());
-  return `https://waasuge-shop.netlify.app/pay?id=${invoiceKey}`;
+  return `https://waasuge-shop.netlify.app/pay.html?id=${invoiceKey}`;
 }
 
 
