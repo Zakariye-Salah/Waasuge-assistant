@@ -235,7 +235,7 @@ function getReceiptQrUrl(text) {
 }
 
 function getPublicWebsiteUrl() {
-  return "https://waasuge-electricity.netlify.app/";
+  return "https://waasuge-shop.netlify.app/";
 }
 
 function getDialerQrUrl(code) {
@@ -282,7 +282,7 @@ function buildCustomerContactMessage(summary) {
     summary?.lastVisit ? `Last visit: ${summary.lastVisit}` : "",
     `Shop Phone: ${getShopPhone()}`,
     `Track your ID in the website: ${getPublicWebsiteUrl()}`,
-    ` https://waasuge-electricity.netlify.app/`,
+    ` https://waasuge-shop.netlify.app/`,
     `— ${getShopName()}`,
   ].filter(Boolean).join("\n");
 }
@@ -1553,7 +1553,7 @@ function markInvoiceSent(invoice, channel) {
 
 function getInvoicePayUrl(invoice) {
   const invoiceKey = encodeURIComponent(String(invoice?.invoiceNumber || invoice?.id || "").trim());
-  return `https://waasuge-electricity.netlify.app/pay?id=${invoiceKey}`;
+  return `https://waasuge-shop.netlify.app/pay?id=${invoiceKey}`;
 }
 
 
@@ -1569,7 +1569,7 @@ function buildMessage(invoice, channel = "whatsapp") {
   const paidText = formatCurrency(paid);
   const remainingText = formatCurrency(remaining);
   const footer = `${getShopName()} (${getShopPhone()})`;
-  const websiteLine = "https://waasuge-electricity.netlify.app/";
+  const websiteLine = "https://waasuge-shop.netlify.app/";
   const payUrl = getInvoicePayUrl(invoice);
 
   if (status === "paid") {
