@@ -1,4 +1,3 @@
-```html
 <!-- pay.html -->
 <!doctype html>
 <html lang="en">
@@ -323,7 +322,7 @@
 
   <script type="module">
     // If your database file has a different name, change this import path.
-    import { getInvoices, getSettingValue, safeNumber, toArray } from "./database-4.js";
+    import { getInvoices, getSettingValue, safeNumber, toArray } from "./database.js";
 
     const params = new URLSearchParams(location.search);
     const invoiceId = String(params.get("id") || "").trim();
@@ -437,7 +436,7 @@
       const shopDigits = digitsOnly(shopPhone) || "617125558";
       const ussd = buildUssd(remaining, shopDigits);
       const telLink = telLinkFromUssd(ussd);
-      const payPage = `https://waasuge-electricity.netlify.app/pay?id=${encodeURIComponent(invoiceId)}`;
+      const payPage = `https://waasuge-shop.netlify.app/pay?id=${encodeURIComponent(invoiceId)}`;
 
       ui.shopName.textContent = shopName || "Waasuge Electronics";
       ui.customerName.textContent = invoice.customerName || "Customer";
@@ -483,4 +482,3 @@
   </script>
 </body>
 </html>
-```
