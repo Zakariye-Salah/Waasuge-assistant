@@ -1563,8 +1563,7 @@ function buildMessage(invoice, channel = "whatsapp") {
   const paidText = formatCurrency(paid);
   const remainingText = formatCurrency(remaining);
   const discountText = formatCurrency(discount);
-  const ussd = `${getPaymentShortcode()}${Math.max(1, Math.round(total))}#`;
-  const footer = `${getShopName()} (${getShopPhone()})`;
+  const ussd = getPaymentShortcodeForBalance(remaining);  const footer = `${getShopName()} (${getShopPhone()})`;
 
   const websiteLine = " https://waasuge-electricity.netlify.app/";
 
