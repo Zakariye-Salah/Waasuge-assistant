@@ -1550,6 +1550,13 @@ function markInvoiceSent(invoice, channel) {
   saveInvoiceSendLog(entries.slice(0, 200));
 }
 
+
+function getInvoicePayUrl(invoice) {
+  const invoiceKey = encodeURIComponent(String(invoice?.invoiceNumber || invoice?.id || "").trim());
+  return `https://waasuge-electricity.netlify.app/pay?id=${invoiceKey}`;
+}
+
+
 function buildMessage(invoice, channel = "whatsapp") {
   const status = normalizeStatus(invoice.paymentStatus);
   const name = invoice.customerName || "Saaxiib";
@@ -1558,57 +1565,41 @@ function buildMessage(invoice, channel = "whatsapp") {
   const total = safeNumber(invoice.finalTotal ?? invoice.total ?? invoice.amount ?? 0);
   const paid = safeNumber(invoice.paidAmount ?? 0);
   const remaining = Math.max(0, safeNumber(invoice.balance ?? total - paid));
-  const discount = safeNumber(invoice.discount ?? 0);
   const totalText = formatCurrency(total);
   const paidText = formatCurrency(paid);
   const remainingText = formatCurrency(remaining);
-  const discountText = formatCurrency(discount);
-  const ussd = getPaymentShortcodeForBalance(remaining);  const footer = `${getShopName()} (${getShopPhone()})`;
-
-  const websiteLine = " https://waasuge-electricity.netlify.app/";
+  const footer = `${getShopName()} (${getShopPhone()})`;
+  const websiteLine = "https://waasuge-electricity.netlify.app/";
+  const payUrl = getInvoicePayUrl(invoice);
 
   if (status === "paid") {
     return [
       `Asc ${name} : ${phone}`,
       `Invoice No: ${invoiceNo}`,
       `Status: Paid`,
-      `Bixisay: $${paidText}`,
-      `Haraaga: $${remainingText}`,
-      `Waad ku mahadsantahay adeegaaga`,
+      `Bixisay: ${paidText}`,
+      `Mahadsanid`,
       websiteLine,
       footer
     ].join("\n");
   }
-  
-  if (status === "partial") {
-    return [
-      `Asc ${name} : ${phone}`,
-      `Invoice No: ${invoiceNo}`,
-      `Status: Partial`,
-      `Total: $ ${totalText}`,
-      `Bixisay: $ ${paidText}`,
-      `Haraaga: $ ${remainingText}`,
-      `Habka Lacag Bixinta:`,
-      `[>] ${ussd}`,
-      `Waad ku mahadsantahay adeegaaga`,
-      websiteLine,
-      footer
-    ].join("\n");
-  }
-  
+
   return [
     `Asc ${name} : ${phone}`,
     `Invoice No: ${invoiceNo}`,
-    `Status: Unpaid`,
-    `Total:$ ${totalText}`,
-    `Haraaga:$ ${remainingText}`,
+    `Status: ${status === "partial" ? "Partial" : "Unpaid"}`,
+    `Total: ${totalText}`,
+    `Bixisay: ${paidText}`,
+    `Haraaga: ${remainingText}`,
     `Habka Lacag Bixinta:`,
-    `[>] ${ussd}`,
+    payUrl,
     `Waad ku mahadsantahay adeegaaga`,
     websiteLine,
     footer
   ].join("\n");
 }
+
+
 
 function openShareInvoice(invoice, channel = "whatsapp") {
   const message = encodeURIComponent(buildMessage(invoice, channel));
