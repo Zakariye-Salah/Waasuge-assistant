@@ -998,6 +998,47 @@
   color:#f59e0b !important;
   font-weight:900;
 }
+
+
+.summary-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.summary-head>div:first-child{
+    flex:1;
+}
+
+.summary-label{
+    font-size:.9rem;
+    font-weight:800;
+    color:#dbeafe;
+}
+
+.summary-sub{
+    margin-top:4px;
+    font-size:.75rem;
+    color:#94a3b8;
+}
+
+.summary-value{
+    margin-top:14px;
+    font-size:1.7rem;
+    font-weight:900;
+}
+
+.summary-icon{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.2rem;
+    flex-shrink:0;
+}
   </style>
 </head>
 <body>
@@ -1039,33 +1080,114 @@
           </div>
 
           <div class="summary-grid">
+
+            <!-- Total -->
+        
             <div class="summary-card fade-up delay-2">
-              <div class="summary-head">
-                <i class="bi bi-cash-stack summary-icon summary-icon-total"></i>
-                <div class="summary-label">Total</div>
-              </div>
-              <div class="summary-value" id="totalValue">$0.00</div>
-              <div class="summary-sub">Full invoice amount</div>
+        
+                <div class="summary-head">
+        
+                    <div>
+        
+                        <div class="summary-label">Total</div>
+        
+                        <div class="summary-sub">
+        
+                            Full invoice amount
+        
+                        </div>
+        
+                    </div>
+        
+                    <div class="summary-icon summary-icon-total">
+        
+                        <i class="bi bi-wallet2"></i>
+        
+                    </div>
+        
+                </div>
+        
+                <div class="summary-value" id="totalValue">
+        
+                    $0.00
+        
+                </div>
+        
             </div>
-          
+        
+        
+        
+            <!-- Paid -->
+        
             <div class="summary-card fade-up delay-3">
-              <div class="summary-head">
-                <i class="bi bi-check2-circle summary-icon summary-icon-paid"></i>
-                <div class="summary-label">Paid</div>
-              </div>
-              <div class="summary-value" id="paidValue">$0.00</div>
-              <div class="summary-sub">Already paid amount</div>
+        
+                <div class="summary-head">
+        
+                    <div>
+        
+                        <div class="summary-label">Paid</div>
+        
+                        <div class="summary-sub">
+        
+                            Already paid amount
+        
+                        </div>
+        
+                    </div>
+        
+                    <div class="summary-icon summary-icon-paid">
+        
+                        <i class="bi bi-check-circle-fill"></i>
+        
+                    </div>
+        
+                </div>
+        
+                <div class="summary-value" id="paidValue">
+        
+                    $0.00
+        
+                </div>
+        
             </div>
-          
+        
+        
+        
+            <!-- Remaining -->
+        
             <div class="summary-card fade-up delay-4">
-              <div class="summary-head">
-                <i class="bi bi-hourglass-split summary-icon summary-icon-remaining"></i>
-                <div class="summary-label">Remaining</div>
-              </div>
-              <div class="summary-value" id="remainingValue">$0.00</div>
-              <div class="summary-sub">Amount to complete</div>
+        
+                <div class="summary-head">
+        
+                    <div>
+        
+                        <div class="summary-label">Remaining</div>
+        
+                        <div class="summary-sub">
+        
+                            Amount to complete
+        
+                        </div>
+        
+                    </div>
+        
+                    <div class="summary-icon summary-icon-remaining">
+        
+                        <i class="bi bi-hourglass-split"></i>
+        
+                    </div>
+        
+                </div>
+        
+                <div class="summary-value" id="remainingValue">
+        
+                    $0.00
+        
+                </div>
+        
             </div>
-          </div>
+        
+        </div>
         </section>
 
         <section class="invoice-grid px-3 px-md-4 pb-4">
@@ -1697,49 +1819,179 @@ function makeContactLinks(invoice, historySummary) {
     return type === "Invoice" ? "bg-soft-primary text-primary-soft" : type === "Repair" ? "bg-soft-success text-success-soft" : "bg-soft-warning text-warning-soft";
   }
 
+
   function renderAllHistory(entries) {
-    if (ui.historyBody) {
-      ui.historyBody.innerHTML = entries.length
-        ? entries.map((row) => `
-          <tr>
-            <td><span class="badge ${rowClass(row.type)}">${row.type}</span></td>
-            <td class="fw-semibold">${escapeHtml(row.ref)}</td>
-            <td>${escapeHtml(row.title)}</td>
-            <td>${escapeHtml(row.phone)}</td>
-            <td>${escapeHtml(row.whatsapp)}</td>
-            <td>${escapeHtml(row.sender)}</td>
-            <td>${escapeHtml(row.paymentType)}</td>
-            <td>${escapeHtml(row.paymentProvider)}</td>
-            <td class="text-nowrap">${fmtMoney(row.paid)}</td>
-            <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
-            <td class="text-nowrap">${fmtMoney(row.amount)}</td>
-            <td class="text-nowrap">${escapeHtml(row.date)}</td>
-            <td>${escapeHtml(row.notes)}</td>
-          </tr>`).join("")
-        : `<tr><td colspan="13" class="text-center text-muted py-4">No history found for this customer.</td></tr>`;
-    }
 
-    if (ui.historyCards) {
-      ui.historyCards.innerHTML = entries.length
-        ? entries.map((row) => `
-          <div class="history-card-item">
-            <div class="d-flex justify-content-between gap-2">
-              <div class="min-w-0">
-                <div class="k">${escapeHtml(row.type)}</div>
-                <div class="v text-truncate">${escapeHtml(row.ref)}</div>
-              </div>
-              <div class="fw-bold text-nowrap">${fmtMoney(row.amount)}</div>
-            </div>
-            <div class="small text-muted mt-2">${escapeHtml(row.title)}</div>
-            <div class="small mt-2"><strong>Phone:</strong> ${escapeHtml(row.phone)}</div>
-            <div class="small"><strong>WhatsApp:</strong> ${escapeHtml(row.whatsapp)}</div>
-            <div class="small"><strong>Paid:</strong> ${fmtMoney(row.paid)} · <strong>Remaining:</strong> ${fmtMoney(row.remaining)}</div>
-            <div class="small"><strong>Date:</strong> ${escapeHtml(row.date)}</div>
-          </div>`).join("")
-        : `<div class="small-note">No history found.</div>`;
-    }
-  }
+if (ui.historyBody) {
 
+    ui.historyBody.innerHTML = entries.length
+
+        ? entries.map((row) => `
+
+<tr>
+<td><span class="badge ${rowClass(row.type)}">${row.type}</span></td>
+
+<td class="fw-semibold">${escapeHtml(row.ref)}</td>
+
+<td>${escapeHtml(row.title)}</td>
+
+<td>${escapeHtml(row.phone)}</td>
+
+<td>${escapeHtml(row.whatsapp)}</td>
+
+<td>${escapeHtml(row.sender)}</td>
+
+<td>${escapeHtml(row.paymentType)}</td>
+
+<td>${escapeHtml(row.paymentProvider)}</td>
+
+<td class="text-nowrap">
+    <span class="history-amount">${fmtMoney(row.paid)}</span>
+</td>
+
+<td class="text-nowrap">
+    <span class="history-amount">${fmtMoney(row.remaining)}</span>
+</td>
+
+<td class="text-nowrap">
+    <span class="history-amount">${fmtMoney(row.amount)}</span>
+</td>
+
+<td class="text-nowrap">${escapeHtml(row.date)}</td>
+
+<td>${escapeHtml(row.notes)}</td>
+
+</tr>
+
+`).join("")
+
+        : `
+
+<tr>
+
+<td colspan="13" class="text-center py-4 text-white">
+
+No history found for this customer.
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+
+
+
+
+
+
+if (ui.historyCards) {
+
+    ui.historyCards.innerHTML = entries.length
+
+        ? entries.map((row) => `
+
+<div class="history-card-item">
+
+<div class="d-flex justify-content-between align-items-start gap-3">
+
+    <div class="min-w-0">
+
+        <div class="k">${escapeHtml(row.type)}</div>
+
+        <div class="v text-truncate">${escapeHtml(row.ref)}</div>
+
+    </div>
+
+    <div class="fw-bold text-nowrap history-amount">
+
+        ${fmtMoney(row.amount)}
+
+    </div>
+
+</div>
+
+
+
+<div class="small mt-2">
+
+    ${escapeHtml(row.title)}
+
+</div>
+
+
+
+<div class="small mt-2">
+
+    <strong>Phone:</strong>
+
+    ${escapeHtml(row.phone)}
+
+</div>
+
+
+
+<div class="small">
+
+    <strong>WhatsApp:</strong>
+
+    ${escapeHtml(row.whatsapp)}
+
+</div>
+
+
+
+<div class="small">
+
+    <strong>Paid:</strong>
+
+    <span class="history-amount">
+
+        ${fmtMoney(row.paid)}
+
+    </span>
+
+    &nbsp;•&nbsp;
+
+    <strong>Remaining:</strong>
+
+    <span class="history-amount">
+
+        ${fmtMoney(row.remaining)}
+
+    </span>
+
+</div>
+
+
+
+<div class="small">
+
+    <strong>Date:</strong>
+
+    ${escapeHtml(row.date)}
+
+</div>
+
+</div>
+
+`).join("")
+
+        : `
+
+<div class="small-note">
+
+No history found.
+
+</div>
+
+`;
+
+}
+
+}
   function renderTypedHistory(entries, tableBody, cardBody, emptyMessage, columns) {
     if (tableBody) {
       tableBody.innerHTML = entries.length
