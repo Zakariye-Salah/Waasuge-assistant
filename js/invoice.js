@@ -32,7 +32,8 @@ import {
   setPageLoading
 } from "./main.js";
 import { DEFAULT_SETTINGS, getGeneralSettings, getPrintingSettings, getMessageTemplate, replacePlaceholders } from "./settings-config.js";
-import { bindQuickCustomerButton, openQuickCustomerModal, upsertCustomer, rebuildCustomerStats, refreshCustomerStatsForRecord, getAllCustomers, getTaggedCustomerList } from "./customer-utils.js";
+import { bindQuickCustomerButton, openQuickCustomerModal, upsertCustomer, rebuildCustomerStats, refreshCustomerStatsForRecord, getAllCustomers, getTaggedCustomerList ,normalizePhone } from "./customer-utils.js";
+
 
 const CART_KEY = "electronicShopCart";
 const CART_DISCOUNT_KEY = "electronicShopCartDiscount";
@@ -268,22 +269,29 @@ function getActiveRecords(items) {
   return toArray(items).filter(isActiveRecord);
 }
 
-function buildCustomerContactMessage(summary) {
+function buildCustomerContactMessage(summary = {}) {
+  const customerName = String(summary?.customerName || "Customer").trim();
+  const phone = String(summary?.phone || "—").trim();
+  const phoneDigits = normalizePhone(phone);
+  const payUrl = summary?.payUrl || (phoneDigits
+    ? `${getPublicWebsiteUrl()}pay.html?id=${encodeURIComponent(phoneDigits)}`
+    : `${getPublicWebsiteUrl()}pay.html`);
+
   return [
-    `${getShopName()}`, 
-    `Customer: ${summary?.customerName || "Customer"}`,
-    `Phone: ${summary?.phone || "—"}`,
+    `${getShopName()}`,
+    `Asc ${customerName} : ${phone}`,
     summary?.invoiceCount != null ? `Invoices: ${summary.invoiceCount}` : "",
     summary?.repairCount != null ? `Repairs: ${summary.repairCount}` : "",
     summary?.totalSpent ? `Total all: ${summary.totalSpent}` : "",
     summary?.totalPaid ? `Total paid: ${summary.totalPaid}` : "",
     summary?.totalRemaining ? `Total remaining: ${summary.totalRemaining}` : "",
-    summary?.historyCount ? `History items: ${summary.historyCount}` : "",
+    summary?.historyCount != null ? `History items: ${summary.historyCount}` : "",
     summary?.lastVisit ? `Last visit: ${summary.lastVisit}` : "",
+    `View all your invoices and payment history:`,
+    payUrl,
     `Shop Phone: ${getShopPhone()}`,
     `Track your ID in the website: ${getPublicWebsiteUrl()}`,
-    ` https://waasuge-shop.netlify.app/`,
-    `— ${getShopName()}`,
+    `— ${getShopName()}`
   ].filter(Boolean).join("\n");
 }
 
@@ -1581,7 +1589,6 @@ function buildMessage(invoice, channel = "whatsapp") {
       `Status: Paid`,
       `Bixisay: ${paidText}`,
       `Mahadsanid`,
-      websiteLine,
       footer
     ].join("\n");
   }
@@ -1596,7 +1603,6 @@ function buildMessage(invoice, channel = "whatsapp") {
     `Habka Lacag Bixinta:`,
     payUrl,
     `Waad ku mahadsantahay adeegaaga`,
-    websiteLine,
     footer
   ].join("\n");
 }
@@ -2978,3 +2984,5 @@ window.ShopInvoice = {
   renderInvoices,
   saveInvoiceFromPage,
 };
+
+
