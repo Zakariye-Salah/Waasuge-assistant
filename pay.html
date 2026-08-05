@@ -349,6 +349,94 @@
       .amount-row{grid-template-columns:1fr}
     }
 
+    .item-row{
+  padding:14px 15px;
+  border-radius:18px;
+  background:linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.10);
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.item-row-1{border-left:4px solid #3b82f6;}
+.item-row-2{border-left:4px solid #22c55e;}
+.item-row-3{border-left:4px solid #f59e0b;}
+
+.item-name{
+  font-weight:900;
+  line-height:1.25;
+  margin-bottom:8px;
+  color:#f8fafc;
+  font-size:1rem;
+  word-break:break-word;
+}
+
+.item-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.item-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.38rem .7rem;
+  border-radius:999px;
+  font-size:.8rem;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.item-pill-qty{
+  background:rgba(59,130,246,.16);
+  color:#dbeafe;
+}
+
+.item-pill-price{
+  background:rgba(34,197,94,.16);
+  color:#dcfce7;
+}
+
+.item-total{
+  text-align:right;
+  flex:0 0 auto;
+  min-width:96px;
+}
+
+.item-total-label{
+  color:var(--muted);
+  font-size:.76rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:900;
+}
+
+.item-total-value{
+  margin-top:.15rem;
+  font-size:1.1rem;
+  font-weight:900;
+  color:#fbbf24;
+}
+
+.summary-card:nth-child(1) .summary-value{color:#3b82f6;}
+.summary-card:nth-child(2) .summary-value{color:#22c55e;}
+.summary-card:nth-child(3) .summary-value{color:#f59e0b;}
+
+.amount-box:nth-child(1) .value{color:#60a5fa;}
+.amount-box:nth-child(2) .value{color:#f59e0b;}
+.amount-box:nth-child(3) .value{color:#22c55e;}
+
+.history-scroll td,
+.history-scroll th,
+.amount-box .value,
+.summary-value,
+.item-name,
+.item-total-value{
+  text-shadow:0 1px 0 rgba(0,0,0,.18);
+}
     .amount-box{
       padding:14px 15px;
       border-radius:18px;
@@ -1182,26 +1270,29 @@
   }
 
   function buildPayMessage(invoice, historySummary) {
-    const total = safeNumber(invoice?.finalTotal ?? invoice?.total ?? invoice?.amount ?? 0);
-    const paid = safeNumber(invoice?.paidAmount ?? 0);
-    const remaining = Math.max(0, safeNumber(invoice?.balance ?? total - paid));
-    const invoiceNo = invoice?.invoiceNumber || invoice?.invoiceNo || invoice?.id || "—";
-    const customerName = invoice?.customerName || "Customer";
-    const customerPhone = invoice?.customerPhone || invoice?.phone || "—";
-    const lines = [
-      `Asc ${customerName}`,
-      `Phone: ${customerPhone}`,
-      `Invoice No: ${invoiceNo}`,
-      `Total: ${fmtMoney(total)}`,
-      `Paid: ${fmtMoney(paid)}`,
-      `Remaining: ${fmtMoney(remaining)}`,
-      historySummary ? `History items: ${historySummary}` : "",
-      `Pay link: ${window.location.origin}${window.location.pathname}?id=${encodeURIComponent(invoice?.id || invoiceNo)}`,
-      `Waasuge Electronics`
-    ];
-    return lines.filter(Boolean).join("\n");
-  }
+  const total = safeNumber(invoice?.finalTotal ?? invoice?.total ?? invoice?.amount ?? 0);
+  const paid = safeNumber(invoice?.paidAmount ?? 0);
+  const remaining = Math.max(0, safeNumber(invoice?.balance ?? total - paid));
+  const invoiceNo = invoice?.invoiceNumber || invoice?.invoiceNo || invoice?.id || "—";
+  const customerName = invoice?.customerName || "Customer";
+  const customerPhone = invoice?.customerPhone || invoice?.phone || "—";
 
+  const lines = [
+    `Asc ${customerName}, fadlan i caawi.`,
+    `Waxaan rabaa inaan hubiyo qaansheegtayda iyo lacagta iga harsan.`,
+    `Customer: ${customerName}`,
+    `Phone: ${customerPhone}`,
+    `Invoice No: ${invoiceNo}`,
+    `Total: ${fmtMoney(total)}`,
+    `Paid: ${fmtMoney(paid)}`,
+    `Remaining: ${fmtMoney(remaining)}`,
+    historySummary ? `History items: ${historySummary}` : "",
+    `Haddii aad aragto wax qalad ah, fadlan ii soo jawaab si degdeg ah.`,
+    `Waasuge Electronics`
+  ];
+
+  return lines.filter(Boolean).join("\n");
+}
   function makeContactLinks(invoice, historySummary) {
     const phone = digitsOnly(invoice?.customerPhone || invoice?.phone || "");
     const whatsapp = normalizePhoneForWhatsApp(invoice?.customerWhatsapp || invoice?.whatsapp || invoice?.customerPhone || invoice?.phone || "");
@@ -1361,34 +1452,40 @@
   }
 
   function renderItems(invoice) {
-    if (!ui.itemsList) return;
-    const items = Array.isArray(invoice?.items)
-      ? invoice.items
-      : toArray(invoice?.items);
+  if (!ui.itemsList) return;
 
-    if (!items.length) {
-      ui.itemsList.innerHTML = `<div class="text-center text-muted py-4">No items found.</div>`;
-      return;
-    }
+  const items = Array.isArray(invoice?.items) ? invoice.items : toArray(invoice?.items);
 
-    ui.itemsList.innerHTML = items.map((item) => {
-      const qty = safeNumber(item?.qty ?? item?.quantity ?? 1, 1);
-      const price = safeNumber(item?.price ?? item?.unitPrice ?? 0);
-      const total = qty * price;
-      return `
-        <div class="item-row">
-          <div class="min-w-0">
-            <div class="fw-bold text-truncate">${escapeHtml(item?.name || item?.productName || "Item")}</div>
-            <small class="text-muted d-block">Qty: ${qty}</small>
-            <small class="text-muted d-block">Price: ${fmtMoney(price)}</small>
-          </div>
-          <div class="fw-bold text-nowrap">${fmtMoney(total)}</div>
-        </div>
-      `;
-    }).join("");
+  if (!items.length) {
+    ui.itemsList.innerHTML = `<div class="text-center text-muted py-4">No items found.</div>`;
+    return;
   }
 
-  function rowClass(type) {
+  ui.itemsList.innerHTML = items.map((item, index) => {
+    const qty = safeNumber(item?.qty ?? item?.quantity ?? 1, 1);
+    const price = safeNumber(item?.price ?? item?.unitPrice ?? 0);
+    const total = qty * price;
+    const name = escapeHtml(item?.name || item?.productName || "Item");
+
+    return `
+      <div class="item-row item-row-${(index % 3) + 1}">
+        <div class="min-w-0">
+          <div class="item-name">${name}</div>
+          <div class="item-meta">
+            <span class="item-pill item-pill-qty"><i class="bi bi-box-seam"></i> Qty: ${qty}</span>
+            <span class="item-pill item-pill-price"><i class="bi bi-tag-fill"></i> Price: ${fmtMoney(price)}</span>
+          </div>
+        </div>
+        <div class="item-total">
+          <div class="item-total-label">Total</div>
+          <div class="item-total-value">${fmtMoney(total)}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+ 
+function rowClass(type) {
     return type === "Invoice" ? "bg-soft-primary text-primary-soft" : type === "Repair" ? "bg-soft-success text-success-soft" : "bg-soft-warning text-warning-soft";
   }
 
