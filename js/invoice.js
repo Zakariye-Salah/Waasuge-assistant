@@ -278,7 +278,6 @@ function buildCustomerContactMessage(summary = {}) {
     : `${getPublicWebsiteUrl()}pay.html`);
 
   return [
-    `${getShopName()}`,
     `Asc ${customerName} : ${phone}`,
     summary?.invoiceCount != null ? `Invoices: ${summary.invoiceCount}` : "",
     summary?.repairCount != null ? `Repairs: ${summary.repairCount}` : "",
@@ -287,11 +286,9 @@ function buildCustomerContactMessage(summary = {}) {
     summary?.totalRemaining ? `Total remaining: ${summary.totalRemaining}` : "",
     summary?.historyCount != null ? `History items: ${summary.historyCount}` : "",
     summary?.lastVisit ? `Last visit: ${summary.lastVisit}` : "",
-    `View all your invoices and payment history:`,
+    `Eeg dhammaan qaansheegyadaada iyo taariikhda lacag-bixinta:`,
     payUrl,
-    `Shop Phone: ${getShopPhone()}`,
-    `Track your ID in the website: ${getPublicWebsiteUrl()}`,
-    `— ${getShopName()}`
+    `— ${getShopName()} : ${getShopPhone()}`
   ].filter(Boolean).join("\n");
 }
 
