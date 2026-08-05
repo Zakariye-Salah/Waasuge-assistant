@@ -67,7 +67,7 @@ function getReceiptQrUrl(text) {
 }
 
 function getPublicWebsiteUrl() {
-  return "https://waasuge-electricity.netlify.app/";
+  return "https://waasuge-shop.netlify.app/"
 }
 
 function getDialerQrUrl(code) {
@@ -1232,7 +1232,7 @@ function buildCustomerContactMessage(summary) {
     summary?.lastVisit ? `Last visit: ${summary.lastVisit}` : "",
     `Shop Phone: ${getGeneralSettings().phone || DEFAULT_SETTINGS.general.phone}`, 
     `Track your ID in the website: ${getPublicWebsiteUrl()}`,
-    ` https://waasuge-electricity.netlify.app/`,
+    ` https://waasuge-shop.netlify.app/`,
   ].filter(Boolean).join("\n");
 }
 
