@@ -5,6 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pay Invoice | Waasuge Electronics</title>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%25%22 stop-color=%22%232563eb%22/%3E%3Cstop offset=%22100%25%22 stop-color=%22%237c3aed%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22M14 26h36v24H14z%22 fill=%22%23fff%22 opacity=%22.96%22/%3E%3Cpath d=%22M18 22h28l4 4H14z%22 fill=%22%23fff%22 opacity=%22.92%22/%3E%3Cpath d=%22M22 31h8v10h-8zm12 0h10v10H34z%22 fill=%22%232563eb%22/%3E%3Cpath d=%22M27 13h10v11H27z%22 fill=%22%23fff%22 opacity=%22.95%22/%3E%3C/svg%3E"/>
+
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -1434,6 +1438,7 @@
 <script type="module">
   import { getInvoices, getRepairs, getPayments, safeNumber, toArray, normalizeText } from "./js/database.js";
 
+  import { findMatchingCustomer } from "./js/customer-utils.js";
   const params = new URLSearchParams(location.search);
   const invoiceId = String(params.get("id") || params.get("invoice") || params.get("invoiceId") || "").trim();
 
@@ -1496,7 +1501,87 @@
     return String(value ?? "").replace(/\D/g, "");
   }
 
-  function normalizePhoneForWhatsApp(value) {
+
+  function isPhoneLookupId(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return false;
+  if (/[a-z]/i.test(raw)) return false;
+  const digits = digitsOnly(raw);
+  return digits.length >= 9 && digits.length <= 12;
+}
+
+function resolveInvoiceByToken(invoices, token) {
+  const needle = String(token ?? "").trim();
+  if (!needle) return null;
+
+  return toArray(invoices).find((inv) => {
+    const keys = [
+      inv?.id,
+      inv?.invoiceNumber,
+      inv?.invoiceNo,
+      inv?.relatedNumber
+    ].map((v) => String(v || "").trim());
+    return keys.includes(needle);
+  }) || null;
+}
+
+function calculateHistoryTotals(history) {
+  const billed = [...(history?.invoiceRows || []), ...(history?.repairRows || [])];
+  const totalSpent = billed.reduce((sum, row) => sum + safeNumber(row.amount), 0);
+  const totalPaid = billed.reduce((sum, row) => sum + safeNumber(row.paid), 0);
+  const totalRemaining = billed.reduce((sum, row) => sum + Math.max(0, safeNumber(row.remaining)), 0);
+
+  return { totalSpent, totalPaid, totalRemaining };
+}
+
+async function resolveCustomerSeed(token, invoices) {
+  const phoneDigits = digitsOnly(token);
+  const customer = await findMatchingCustomer({
+    phoneNumber: token,
+    phone: token,
+    customerPhone: token,
+    whatsapp: token
+  }).catch(() => null);
+
+  if (customer) return customer;
+
+  const latestInvoice = toArray(invoices)
+    .filter((inv) => digitsOnly(inv?.customerPhone || inv?.phone || inv?.customerWhatsapp || inv?.whatsapp) === phoneDigits)
+    .sort((a, b) => safeNumber(b?.updatedAt || b?.createdAt) - safeNumber(a?.updatedAt || a?.createdAt))[0];
+
+  if (latestInvoice) return latestInvoice;
+
+  return {
+    id: phoneDigits || token,
+    customerId: phoneDigits || token,
+    customerName: `Customer ${phoneDigits || token}`,
+    customerPhone: token,
+    phone: token,
+    customerWhatsapp: token,
+    whatsapp: token,
+  };
+}
+
+function createCustomerHistoryInvoice(seed, history, token) {
+  const totals = calculateHistoryTotals(history);
+  const phoneDigits = digitsOnly(token);
+
+  return {
+    ...seed,
+    id: seed?.id || seed?.customerId || token,
+    invoiceNumber: `CUSTOMER-${phoneDigits || "HISTORY"}`,
+    invoiceNo: "Customer history",
+    finalTotal: totals.totalSpent,
+    total: totals.totalSpent,
+    amount: totals.totalSpent,
+    paidAmount: totals.totalPaid,
+    balance: totals.totalRemaining,
+    paymentStatus: totals.totalRemaining > 0 ? (totals.totalPaid > 0 ? "partial" : "unpaid") : "paid",
+    mode: "customer-history",
+  };
+}
+
+function normalizePhoneForWhatsApp(value) {
     let d = digitsOnly(value);
     if (!d) return "";
     if (d.startsWith("00")) d = d.slice(2);
@@ -2122,34 +2207,22 @@ No history found.
   }
 
   async function loadInvoice() {
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const [invoicesRaw, repairsRaw, paymentsRaw] = await Promise.all([
-        getInvoices().catch(() => []),
-        getRepairs().catch(() => []),
-        getPayments().catch(() => [])
-      ]);
+  try {
+    const [invoicesRaw, repairsRaw, paymentsRaw] = await Promise.all([
+      getInvoices().catch(() => []),
+      getRepairs().catch(() => []),
+      getPayments().catch(() => [])
+    ]);
 
-      const invoices = toArray(invoicesRaw);
-      const repairs = toArray(repairsRaw);
-      const payments = toArray(paymentsRaw);
+    const invoices = toArray(invoicesRaw);
+    const repairs = toArray(repairsRaw);
+    const payments = toArray(paymentsRaw);
 
-      const invoice = invoices.find((inv) => {
-        const keys = [
-          inv?.id,
-          inv?.invoiceNumber,
-          inv?.invoiceNo,
-          inv?.relatedNumber
-        ].map((v) => String(v || "").trim());
-        return keys.includes(invoiceId);
-      });
+    const invoice = resolveInvoiceByToken(invoices, invoiceId);
 
-      if (!invoice) {
-        showError(`Invoice not found: ${invoiceId || "missing id"}`);
-        return;
-      }
-
+    if (invoice) {
       currentInvoice = invoice;
       const history = buildHistory(invoices, repairs, payments, invoice);
 
@@ -2160,10 +2233,29 @@ No history found.
 
       setHistoryTab("all");
       setLoading(false);
-    } catch (error) {
-      showError(error?.message || "Could not load invoice.");
+      return;
     }
+
+    if (isPhoneLookupId(invoiceId)) {
+      const seed = await resolveCustomerSeed(invoiceId, invoices);
+      const history = buildHistory(invoices, repairs, payments, seed);
+      currentInvoice = createCustomerHistoryInvoice(seed, history, invoiceId);
+
+      renderSummary(currentInvoice, history.summary);
+      renderItems(currentInvoice);
+      renderAllHistory(history.combined);
+      renderTypedSections(history);
+
+      setHistoryTab("all");
+      setLoading(false);
+      return;
+    }
+
+    showError(`Invoice not found: ${invoiceId || "missing id"}`);
+  } catch (error) {
+    showError(error?.message || "Could not load invoice.");
   }
+}
 
   document.querySelectorAll("[data-history-tab]").forEach((btn) => {
     btn.addEventListener("click", () => setHistoryTab(btn.dataset.historyTab));
