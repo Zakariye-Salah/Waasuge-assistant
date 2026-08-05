@@ -32,7 +32,7 @@ import {
   setPageLoading
 } from "./main.js";
 import { DEFAULT_SETTINGS, getGeneralSettings, getPrintingSettings, getMessageTemplate, replacePlaceholders } from "./settings-config.js";
-import { bindQuickCustomerButton, openQuickCustomerModal, upsertCustomer, rebuildCustomerStats, refreshCustomerStatsForRecord, getAllCustomers, getTaggedCustomerList ,normalizePhone } from "./customer-utils.js";
+import { bindQuickCustomerButton, openQuickCustomerModal, upsertCustomer, rebuildCustomerStats, refreshCustomerStatsForRecord, getAllCustomers, getTaggedCustomerList  } from "./customer-utils.js";
 
 
 const CART_KEY = "electronicShopCart";
