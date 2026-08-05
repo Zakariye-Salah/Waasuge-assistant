@@ -609,6 +609,134 @@
       from{opacity:0; transform:translateY(14px)}
       to{opacity:1; transform:translateY(0)}
     }
+
+    .section-card{
+      border-radius:24px;
+      padding:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .items-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .item-row{
+      padding:14px 15px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .item-row .name{
+      font-weight:900;
+      line-height:1.2;
+      margin-bottom:4px;
+    }
+
+    .item-row .meta{
+      color:var(--muted);
+      font-size:.88rem;
+      line-height:1.4;
+    }
+
+    .history-tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .history-tab{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:800;
+      font-size:.88rem;
+      transition:transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .history-tab.active{
+      background:linear-gradient(135deg, rgba(59,130,246,.22), rgba(34,197,94,.16));
+      border-color:rgba(255,255,255,.16);
+    }
+
+    .history-pane{
+      display:none;
+    }
+
+    .history-pane.active{
+      display:block;
+      animation: fadeUp .35s ease both;
+    }
+
+    .history-table{
+      width:100%;
+      min-width:760px;
+    }
+
+    .history-scroll{
+      overflow:auto;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+    }
+
+    .history-scroll table{
+      margin-bottom:0;
+      color:var(--text);
+    }
+
+    .history-scroll th{
+      white-space:nowrap;
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      color:var(--muted);
+      font-weight:900;
+      border-color:rgba(255,255,255,.08);
+    }
+
+    .history-scroll td{
+      border-color:rgba(255,255,255,.06);
+      vertical-align:middle;
+    }
+
+    @media (max-width: 767.98px){
+      .history-table{
+        min-width:0;
+      }
+      .history-card{
+        display:grid;
+        gap:10px;
+      }
+      .history-card-item{
+        padding:14px 15px;
+        border-radius:18px;
+        background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.08);
+      }
+      .history-card-item .k{
+        color:var(--muted);
+        font-size:.76rem;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        font-weight:900;
+      }
+      .history-card-item .v{
+        font-weight:900;
+        margin-top:2px;
+        word-break:break-word;
+      }
+    }
   </style>
 </head>
 <body>
@@ -720,10 +848,6 @@
               </div>
 
               <div class="d-grid gap-2">
-                <a id="whatsappLink" class="payment-link whatsapp" href="#" target="_blank" rel="noopener noreferrer">
-                  <i class="bi bi-whatsapp"></i>
-                  WhatsApp
-                </a>
                 <a id="visitLink" class="payment-link visit" href="https://waasuge-shop.netlify.app/" target="_blank" rel="noopener noreferrer">
                   <i class="bi bi-box-arrow-up-right"></i>
                   Visit Us
@@ -739,49 +863,143 @@
           <div class="panel fade-up delay-3">
             <div class="panel-head">
               <div>
-                <div class="section-kicker">Invoice preview</div>
-                <h2 class="section-title mb-0">Quick summary</h2>
-                <div class="small-note mt-2">Your invoice information appears here once loaded from the database.</div>
+                <div class="section-kicker">Invoice items</div>
+                <h2 class="section-title mb-0">What the customer bought</h2>
+                <div class="small-note mt-2">These items are loaded directly from the invoice record.</div>
               </div>
-              <span class="mini-chip"><i class="bi bi-receipt"></i> Live data</span>
+              <span class="mini-chip"><i class="bi bi-bag-check"></i> Live items</span>
             </div>
 
-            <div class="info-stack">
-              <div class="info-line">
-                <div>
-                  <div class="label">Status</div>
-                  <div class="small-note">Current payment state</div>
-                </div>
-                <div class="value" id="statusText">—</div>
+            <div class="section-card">
+              <div class="items-list" id="itemsList">
+                <div class="small-note">Loading items...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="px-3 px-md-4 pb-4">
+          <div class="panel fade-up delay-3">
+            <div class="panel-head">
+              <div>
+                <div class="section-kicker">Customer history</div>
+                <h2 class="section-title mb-0">All linked history</h2>
+                <div class="small-note mt-2">Invoices, repairs, and payments for the same customer.</div>
+              </div>
+              <span class="mini-chip"><i class="bi bi-clock-history"></i> History</span>
+            </div>
+
+            <div class="history-tabs">
+              <button class="history-tab active" type="button" data-history-tab="all">All</button>
+              <button class="history-tab" type="button" data-history-tab="invoices">Invoices</button>
+              <button class="history-tab" type="button" data-history-tab="repairs">Repairs</button>
+              <button class="history-tab" type="button" data-history-tab="payments">Payments</button>
+            </div>
+
+            <div class="history-pane active" data-history-pane="all">
+              <div class="history-scroll d-none d-md-block">
+                <table class="table align-middle history-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Reference</th>
+                      <th>Details</th>
+                      <th>Phone</th>
+                      <th>WhatsApp</th>
+                      <th>Sender</th>
+                      <th>Payment Type</th>
+                      <th>Provider / Currency</th>
+                      <th>Paid</th>
+                      <th>Remaining</th>
+                      <th>Total</th>
+                      <th>Date</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="historyBody">
+                    <tr><td colspan="13" class="text-center text-muted py-4">Loading history...</td></tr>
+                  </tbody>
+                </table>
               </div>
 
-              <div class="info-line">
-                <div>
-                  <div class="label">Invoice number</div>
-                  <div class="small-note">Reference ID</div>
-                </div>
-                <div class="value" id="invoiceText">—</div>
-              </div>
-
-              <div class="info-line">
-                <div>
-                  <div class="label">Payment method</div>
-                  <div class="small-note">Tap the code to dial</div>
-                </div>
-                <div class="value" id="methodText">Mobile Money</div>
-              </div>
-
-              <div class="info-line">
-                <div>
-                  <div class="label">Help</div>
-                  <div class="small-note">Use WhatsApp for quick support</div>
-                </div>
-                <div class="value">Available</div>
+              <div class="history-card d-md-none" id="historyCards">
+                <div class="small-note">Loading history...</div>
               </div>
             </div>
 
-            <div class="mt-3 footer-note">
-              Thank you for choosing Waasuge Electronics. We appreciate your trust and support.
+            <div class="history-pane" data-history-pane="invoices">
+              <div class="history-scroll d-none d-md-block">
+                <table class="table align-middle history-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice #</th>
+                      <th>Phone</th>
+                      <th>Total</th>
+                      <th>Paid</th>
+                      <th>Remaining</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="invoiceHistoryBody">
+                    <tr><td colspan="7" class="text-center text-muted py-4">Loading invoice history...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="history-card d-md-none" id="invoiceHistoryCards">
+                <div class="small-note">Loading invoice history...</div>
+              </div>
+            </div>
+
+            <div class="history-pane" data-history-pane="repairs">
+              <div class="history-scroll d-none d-md-block">
+                <table class="table align-middle history-table">
+                  <thead>
+                    <tr>
+                      <th>Repair #</th>
+                      <th>Phone</th>
+                      <th>Device</th>
+                      <th>Problem</th>
+                      <th>Total</th>
+                      <th>Paid</th>
+                      <th>Remaining</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="repairHistoryBody">
+                    <tr><td colspan="9" class="text-center text-muted py-4">Loading repair history...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="history-card d-md-none" id="repairHistoryCards">
+                <div class="small-note">Loading repair history...</div>
+              </div>
+            </div>
+
+            <div class="history-pane" data-history-pane="payments">
+              <div class="history-scroll d-none d-md-block">
+                <table class="table align-middle history-table">
+                  <thead>
+                    <tr>
+                      <th>Ref</th>
+                      <th>Phone</th>
+                      <th>Paid</th>
+                      <th>Total</th>
+                      <th>Remaining</th>
+                      <th>Type</th>
+                      <th>Provider</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="paymentHistoryBody">
+                    <tr><td colspan="8" class="text-center text-muted py-4">Loading payment history...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="history-card d-md-none" id="paymentHistoryCards">
+                <div class="small-note">Loading payment history...</div>
+              </div>
             </div>
           </div>
         </section>
@@ -819,7 +1037,7 @@
   </div>
 
   <script type="module">
-    import { getInvoices, getSettingValue, safeNumber, toArray } from "./js/database.js";
+    import { getInvoices, getRepairs, getPayments, getSettingValue, safeNumber, toArray, normalizeText } from "./js/database.js";
 
     const params = new URLSearchParams(location.search);
     const invoiceId = String(params.get("id") || "").trim();
@@ -843,7 +1061,6 @@
       remainingBox: el("remainingBox"),
       payNowLink: el("payNowLink"),
       ussdLink: el("ussdLink"),
-      whatsappLink: el("whatsappLink"),
       visitLink: el("visitLink"),
       dockWhatsApp: el("dockWhatsApp"),
       dockVisit: el("dockVisit"),
@@ -856,6 +1073,15 @@
       footerText: el("footerText"),
       loadingRow: el("loadingRow"),
       errorBox: el("errorBox"),
+      itemsList: el("itemsList"),
+      historyBody: el("historyBody"),
+      historyCards: el("historyCards"),
+      invoiceHistoryBody: el("invoiceHistoryBody"),
+      invoiceHistoryCards: el("invoiceHistoryCards"),
+      repairHistoryBody: el("repairHistoryBody"),
+      repairHistoryCards: el("repairHistoryCards"),
+      paymentHistoryBody: el("paymentHistoryBody"),
+      paymentHistoryCards: el("paymentHistoryCards"),
     };
 
     function money(value) {
@@ -911,20 +1137,224 @@
       ui.methodText.textContent = "Mobile Money";
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    }
+
+    function normalizeHistoryItem(item, type) {
+      return {
+        type,
+        ref: item?.invoiceNumber || item?.repairNumber || item?.relatedNumber || item?.id || "—",
+        title: type === "Invoice"
+          ? (item?.items?.length ? item.items.map((x) => x?.name || x?.productName || "Item").join(", ") : "Invoice")
+          : type === "Repair"
+            ? `${item?.deviceName || item?.device || "Device"} · ${item?.problem || item?.issue || "Repair"}`
+            : (item?.notes || "Payment"),
+        phone: item?.customerPhone || item?.phone || "—",
+        whatsapp: item?.customerWhatsapp || item?.whatsapp || item?.customerPhone || item?.phone || "—",
+        sender: item?.senderNumber || item?.moneySenderNumber || "—",
+        paymentType: item?.paymentType || "Mobile Money",
+        paymentProvider: item?.paymentProvider || item?.cashCurrency || "—",
+        paid: safeNumber(item?.paidAmount ?? item?.paidNow ?? item?.amount ?? 0),
+        remaining: safeNumber(item?.balance ?? item?.totalRemaining ?? 0),
+        amount: safeNumber(item?.finalTotal ?? item?.total ?? item?.amount ?? item?.price ?? 0),
+        date: item?.createdAt ? new Date(item.createdAt).toLocaleString() : "—",
+        stamp: safeNumber(item?.createdAt ?? item?.updatedAt ?? 0),
+        notes: item?.notes || "—",
+        status: item?.paymentStatus || item?.status || "—",
+      };
+    }
+
+    function isSameCustomer(invoice, seed) {
+      const aPhone = normalizeText(invoice?.customerPhone || invoice?.phone || "");
+      const bPhone = normalizeText(seed?.customerPhone || seed?.phone || "");
+      const aName = normalizeText(invoice?.customerName || "");
+      const bName = normalizeText(seed?.customerName || "");
+      if (aPhone && bPhone && aPhone === bPhone) return true;
+      if (aName && bName && aName === bName) return true;
+      return false;
+    }
+
+    function renderItems(items) {
+      if (!items.length) {
+        ui.itemsList.innerHTML = '<div class="small-note">No items found on this invoice.</div>';
+        return;
+      }
+
+      ui.itemsList.innerHTML = items.map((item) => {
+        const qty = safeNumber(item.qty, 1);
+        const price = safeNumber(item.price ?? item.unitPrice ?? 0);
+        const total = qty * price;
+        return `
+          <div class="item-row">
+            <div class="min-w-0">
+              <div class="name">${escapeHtml(item.name || item.productName || "Item")}</div>
+              <div class="meta">Qty: ${qty} · Price: ${fmtMoney(price)}</div>
+            </div>
+            <div class="text-end fw-black" style="font-weight:900;">${fmtMoney(total)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHistoryTable(rows, targetBody, targetCards, mode) {
+      const filteredRows = rows.filter(Boolean).sort((a, b) => (b.stamp || 0) - (a.stamp || 0));
+
+      if (targetBody) {
+        const tableRows = filteredRows.length
+          ? filteredRows.map((row) => {
+              if (mode === "invoices") {
+                return `
+                  <tr>
+                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+                    <td>${escapeHtml(row.phone || "—")}</td>
+                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+                    <td>${escapeHtml(row.status || "—")}</td>
+                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
+                  </tr>
+                `;
+              }
+
+              if (mode === "repairs") {
+                return `
+                  <tr>
+                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+                    <td>${escapeHtml(row.phone || "—")}</td>
+                    <td>${escapeHtml(row.title.split(" · ")[0] || "—")}</td>
+                    <td>${escapeHtml(row.title.split(" · ")[1] || "—")}</td>
+                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+                    <td>${escapeHtml(row.status || "—")}</td>
+                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
+                  </tr>
+                `;
+              }
+
+              if (mode === "payments") {
+                return `
+                  <tr>
+                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+                    <td>${escapeHtml(row.phone || "—")}</td>
+                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+                    <td>${escapeHtml(row.paymentType)}</td>
+                    <td>${escapeHtml(row.paymentProvider)}</td>
+                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
+                  </tr>
+                `;
+              }
+
+              return `
+                <tr>
+                  <td><span class="badge bg-primary">Invoice</span></td>
+                  <td class="fw-semibold">${escapeHtml(row.ref)}</td>
+                  <td>${escapeHtml(row.title)}</td>
+                  <td>${escapeHtml(row.phone || "—")}</td>
+                  <td>${escapeHtml(row.whatsapp || "—")}</td>
+                  <td>${escapeHtml(row.sender || "—")}</td>
+                  <td>${escapeHtml(row.paymentType || "—")}</td>
+                  <td>${escapeHtml(row.paymentProvider || "—")}</td>
+                  <td class="text-nowrap">${fmtMoney(row.paid)}</td>
+                  <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
+                  <td class="text-nowrap">${fmtMoney(row.amount)}</td>
+                  <td class="text-nowrap">${escapeHtml(row.date)}</td>
+                  <td>${escapeHtml(row.notes || "—")}</td>
+                </tr>
+              `;
+            }).join("")
+          : `<tr><td colspan="${mode === "all" ? 13 : mode === "repairs" ? 9 : mode === "payments" ? 8 : 7}" class="text-center text-muted py-4">No records found.</td></tr>`;
+
+        targetBody.innerHTML = tableRows;
+      }
+
+      if (targetCards) {
+        if (!filteredRows.length) {
+          targetCards.innerHTML = '<div class="small-note">No records found.</div>';
+          return;
+        }
+
+        targetCards.innerHTML = filteredRows.map((row) => {
+          if (mode === "invoices") {
+            return `
+              <div class="history-card-item">
+                <div class="k">Invoice</div><div class="v">${escapeHtml(row.ref)}</div>
+                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
+                <div class="k mt-2">Total / Paid / Remaining</div><div class="v">${fmtMoney(row.amount)} · ${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)}</div>
+                <div class="k mt-2">Status</div><div class="v">${escapeHtml(row.status || "—")}</div>
+                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
+              </div>
+            `;
+          }
+          if (mode === "repairs") {
+            return `
+              <div class="history-card-item">
+                <div class="k">Repair</div><div class="v">${escapeHtml(row.ref)}</div>
+                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
+                <div class="k mt-2">Details</div><div class="v">${escapeHtml(row.title)}</div>
+                <div class="k mt-2">Total / Paid / Remaining</div><div class="v">${fmtMoney(row.amount)} · ${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)}</div>
+                <div class="k mt-2">Status</div><div class="v">${escapeHtml(row.status || "—")}</div>
+                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
+              </div>
+            `;
+          }
+          if (mode === "payments") {
+            return `
+              <div class="history-card-item">
+                <div class="k">Ref</div><div class="v">${escapeHtml(row.ref)}</div>
+                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
+                <div class="k mt-2">Paid / Total / Remaining</div><div class="v">${fmtMoney(row.paid)} · ${fmtMoney(row.amount)} · ${fmtMoney(row.remaining)}</div>
+                <div class="k mt-2">Type</div><div class="v">${escapeHtml(row.paymentType)}</div>
+                <div class="k mt-2">Provider</div><div class="v">${escapeHtml(row.paymentProvider)}</div>
+                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
+              </div>
+            `;
+          }
+          return `
+            <div class="history-card-item">
+              <div class="k">Type</div><div class="v">${escapeHtml(row.type)}</div>
+              <div class="k mt-2">Reference</div><div class="v">${escapeHtml(row.ref)}</div>
+              <div class="k mt-2">Details</div><div class="v">${escapeHtml(row.title)}</div>
+              <div class="k mt-2">Phone / WhatsApp</div><div class="v">${escapeHtml(row.phone || "—")} / ${escapeHtml(row.whatsapp || "—")}</div>
+              <div class="k mt-2">Paid / Remaining / Total</div><div class="v">${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)} · ${fmtMoney(row.amount)}</div>
+              <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    function setHistoryTab(tab) {
+      document.querySelectorAll(".history-tab").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.historyTab === tab);
+      });
+      document.querySelectorAll(".history-pane").forEach((pane) => {
+        pane.classList.toggle("active", pane.dataset.historyPane === tab);
+      });
+    }
+
     async function loadInvoice() {
       if (!invoiceId) {
         showError("Missing invoice id in the URL.");
         return;
       }
 
-      const [shopName, shopPhone, shopWhatsapp, invoices] = await Promise.all([
+      const [shopName, shopPhone, shopWhatsapp, invoicesRaw, repairsRaw, paymentsRaw] = await Promise.all([
         getSettingValue("shopName", "Waasuge Electronics"),
         getSettingValue("phone", "617125558"),
         getSettingValue("whatsapp", "252617125558"),
-        getInvoices()
+        getInvoices(),
+        getRepairs(),
+        getPayments().catch(() => null)
       ]);
 
-      const invoiceList = toArray(invoices);
+      const invoiceList = toArray(invoicesRaw);
+      const repairList = toArray(repairsRaw);
+      const paymentList = toArray(paymentsRaw);
+
       const invoice = invoiceList.find((item) => {
         const rowId = String(item?.invoiceNumber || item?.id || "").trim();
         return rowId === invoiceId || String(item?.id || "").trim() === invoiceId;
@@ -955,7 +1385,7 @@
       ui.customerName.textContent = customerName;
       ui.customerPhone.textContent = phone;
       ui.invoiceNo.textContent = invoiceNo;
-      ui.invoiceText.textContent = invoiceNo;
+      ui.invoiceStatus.textContent = `Status: ${invoice.paymentStatus || (remaining <= 0 ? "Paid" : "Partial")}`;
       ui.totalValue.textContent = fmtMoney(total);
       ui.paidValue.textContent = fmtMoney(paid);
       ui.remainingValue.textContent = fmtMoney(remaining);
@@ -976,12 +1406,11 @@
       ui.payNowLink.href = telLink;
       ui.ussdLink.href = telLink;
       ui.ussdLink.textContent = ussd;
-
-      ui.whatsappLink.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
-      ui.dockWhatsApp.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
-
       ui.visitLink.href = "https://waasuge-shop.netlify.app/";
       ui.dockVisit.href = "https://waasuge-shop.netlify.app/";
+      ui.whatsappLink = null;
+
+      ui.dockWhatsApp.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
 
       if (remaining <= 0) {
         ui.payNowLink.innerHTML = `<i class="bi bi-check2-circle"></i> Paid`;
@@ -992,11 +1421,34 @@
         ui.ussdLink.href = "#";
       }
 
-      document.title = `${invoiceNo} | Waasuge Electronics`;
-
+      ui.customerPhone.textContent = phone;
       ui.loadingRow?.classList.add("d-none");
       ui.errorBox?.classList.add("d-none");
+
+      const items = toArray(invoice.items || []);
+      renderItems(items);
+
+      const sameInvoices = invoiceList.filter((item) => item && isSameCustomer(item, invoice));
+      const sameRepairs = repairList.filter((item) => item && isSameCustomer(item, invoice));
+      const samePayments = paymentList.filter((item) => item && isSameCustomer(item, invoice));
+
+      const invoiceRows = sameInvoices.map((item) => normalizeHistoryItem(item, "Invoice"));
+      const repairRows = sameRepairs.map((item) => normalizeHistoryItem(item, "Repair"));
+      const paymentRows = samePayments.map((item) => normalizeHistoryItem(item, "Payment"));
+
+      const combinedRows = [...invoiceRows, ...repairRows, ...paymentRows].sort((a, b) => (b.stamp || 0) - (a.stamp || 0));
+
+      renderHistoryTable(combinedRows, ui.historyBody, ui.historyCards, "all");
+      renderHistoryTable(invoiceRows, ui.invoiceHistoryBody, ui.invoiceHistoryCards, "invoices");
+      renderHistoryTable(repairRows, ui.repairHistoryBody, ui.repairHistoryCards, "repairs");
+      renderHistoryTable(paymentRows, ui.paymentHistoryBody, ui.paymentHistoryCards, "payments");
+
+      document.title = `${invoiceNo} | Waasuge Electronics`;
     }
+
+    document.querySelectorAll("[data-history-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => setHistoryTab(btn.dataset.historyTab));
+    });
 
     loadInvoice().catch((error) => {
       showError(error?.message || "Could not load invoice.");
@@ -1004,4 +1456,3 @@
   </script>
 </body>
 </html>
-
