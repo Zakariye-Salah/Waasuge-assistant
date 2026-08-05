@@ -1132,9 +1132,18 @@
       const [bgClass, txtClass, label] = map[text] || ["bg-secondary", "text-white", "Unknown"];
       ui.statusPill.className = `status-pill ${bgClass} ${txtClass}`;
       ui.statusPill.innerHTML = `<i class="bi bi-circle-fill"></i> ${label}`;
-      ui.invoiceStatus.textContent = `Status: ${label}`;
-      ui.statusText.textContent = label;
-      ui.methodText.textContent = "Mobile Money";
+      
+      if (ui.statusText) {
+    ui.statusText.textContent = label;
+}
+
+if (ui.methodText) {
+    ui.methodText.textContent = "Mobile Money";
+}
+
+if (ui.invoiceText) {
+    ui.invoiceText.textContent = invoiceNo;
+}
     }
 
     function escapeHtml(value) {
@@ -1175,158 +1184,146 @@
       return false;
     }
 
-    function renderItems(items) {
-      if (!items.length) {
-        ui.itemsList.innerHTML = '<div class="small-note">No items found on this invoice.</div>';
-        return;
-      }
+    function renderItems(invoice) {
+    if (!itemsList) return;
 
-      ui.itemsList.innerHTML = items.map((item) => {
-        const qty = safeNumber(item.qty, 1);
-        const price = safeNumber(item.price ?? item.unitPrice ?? 0);
-        const total = qty * price;
-        return `
-          <div class="item-row">
-            <div class="min-w-0">
-              <div class="name">${escapeHtml(item.name || item.productName || "Item")}</div>
-              <div class="meta">Qty: ${qty} · Price: ${fmtMoney(price)}</div>
+    const items = Array.isArray(invoice?.items)
+        ? invoice.items
+        : Object.values(invoice?.items || {});
+
+    if (!items.length) {
+        itemsList.innerHTML = `
+            <div class="text-center text-muted py-4">
+                No items found.
             </div>
-            <div class="text-end fw-black" style="font-weight:900;">${fmtMoney(total)}</div>
-          </div>
         `;
-      }).join("");
+        return;
     }
 
-    function renderHistoryTable(rows, targetBody, targetCards, mode) {
-      const filteredRows = rows.filter(Boolean).sort((a, b) => (b.stamp || 0) - (a.stamp || 0));
+    itemsList.innerHTML = items.map(item => {
 
-      if (targetBody) {
-        const tableRows = filteredRows.length
-          ? filteredRows.map((row) => {
-              if (mode === "invoices") {
-                return `
-                  <tr>
-                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
-                    <td>${escapeHtml(row.phone || "—")}</td>
-                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
-                    <td>${escapeHtml(row.status || "—")}</td>
-                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
-                  </tr>
-                `;
-              }
+        const qty = Number(item.qty || 1);
+        const price = Number(item.price ?? item.unitPrice ?? 0);
+        const total = qty * price;
 
-              if (mode === "repairs") {
-                return `
-                  <tr>
-                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
-                    <td>${escapeHtml(row.phone || "—")}</td>
-                    <td>${escapeHtml(row.title.split(" · ")[0] || "—")}</td>
-                    <td>${escapeHtml(row.title.split(" · ")[1] || "—")}</td>
-                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
-                    <td>${escapeHtml(row.status || "—")}</td>
-                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
-                  </tr>
-                `;
-              }
+        return `
+            <div class="item-row">
 
-              if (mode === "payments") {
-                return `
-                  <tr>
-                    <td class="fw-semibold">${escapeHtml(row.ref)}</td>
-                    <td>${escapeHtml(row.phone || "—")}</td>
-                    <td class="text-nowrap">${fmtMoney(row.paid)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.amount)}</td>
-                    <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
-                    <td>${escapeHtml(row.paymentType)}</td>
-                    <td>${escapeHtml(row.paymentProvider)}</td>
-                    <td class="text-nowrap">${escapeHtml(row.date)}</td>
-                  </tr>
-                `;
-              }
+                <div>
 
-              return `
-                <tr>
-                  <td><span class="badge bg-primary">Invoice</span></td>
-                  <td class="fw-semibold">${escapeHtml(row.ref)}</td>
-                  <td>${escapeHtml(row.title)}</td>
-                  <td>${escapeHtml(row.phone || "—")}</td>
-                  <td>${escapeHtml(row.whatsapp || "—")}</td>
-                  <td>${escapeHtml(row.sender || "—")}</td>
-                  <td>${escapeHtml(row.paymentType || "—")}</td>
-                  <td>${escapeHtml(row.paymentProvider || "—")}</td>
-                  <td class="text-nowrap">${fmtMoney(row.paid)}</td>
-                  <td class="text-nowrap">${fmtMoney(row.remaining)}</td>
-                  <td class="text-nowrap">${fmtMoney(row.amount)}</td>
-                  <td class="text-nowrap">${escapeHtml(row.date)}</td>
-                  <td>${escapeHtml(row.notes || "—")}</td>
-                </tr>
-              `;
-            }).join("")
-          : `<tr><td colspan="${mode === "all" ? 13 : mode === "repairs" ? 9 : mode === "payments" ? 8 : 7}" class="text-center text-muted py-4">No records found.</td></tr>`;
+                    <div class="fw-bold">
+                        ${item.name || item.productName || "Item"}
+                    </div>
 
-        targetBody.innerHTML = tableRows;
-      }
+                    <small class="text-muted d-block">
+                        Qty: ${qty}
+                    </small>
 
-      if (targetCards) {
-        if (!filteredRows.length) {
-          targetCards.innerHTML = '<div class="small-note">No records found.</div>';
-          return;
-        }
+                    <small class="text-muted d-block">
+                        Price: ${formatCurrency(price)}
+                    </small>
 
-        targetCards.innerHTML = filteredRows.map((row) => {
-          if (mode === "invoices") {
-            return `
-              <div class="history-card-item">
-                <div class="k">Invoice</div><div class="v">${escapeHtml(row.ref)}</div>
-                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
-                <div class="k mt-2">Total / Paid / Remaining</div><div class="v">${fmtMoney(row.amount)} · ${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)}</div>
-                <div class="k mt-2">Status</div><div class="v">${escapeHtml(row.status || "—")}</div>
-                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
-              </div>
-            `;
-          }
-          if (mode === "repairs") {
-            return `
-              <div class="history-card-item">
-                <div class="k">Repair</div><div class="v">${escapeHtml(row.ref)}</div>
-                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
-                <div class="k mt-2">Details</div><div class="v">${escapeHtml(row.title)}</div>
-                <div class="k mt-2">Total / Paid / Remaining</div><div class="v">${fmtMoney(row.amount)} · ${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)}</div>
-                <div class="k mt-2">Status</div><div class="v">${escapeHtml(row.status || "—")}</div>
-                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
-              </div>
-            `;
-          }
-          if (mode === "payments") {
-            return `
-              <div class="history-card-item">
-                <div class="k">Ref</div><div class="v">${escapeHtml(row.ref)}</div>
-                <div class="k mt-2">Phone</div><div class="v">${escapeHtml(row.phone || "—")}</div>
-                <div class="k mt-2">Paid / Total / Remaining</div><div class="v">${fmtMoney(row.paid)} · ${fmtMoney(row.amount)} · ${fmtMoney(row.remaining)}</div>
-                <div class="k mt-2">Type</div><div class="v">${escapeHtml(row.paymentType)}</div>
-                <div class="k mt-2">Provider</div><div class="v">${escapeHtml(row.paymentProvider)}</div>
-                <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
-              </div>
-            `;
-          }
-          return `
-            <div class="history-card-item">
-              <div class="k">Type</div><div class="v">${escapeHtml(row.type)}</div>
-              <div class="k mt-2">Reference</div><div class="v">${escapeHtml(row.ref)}</div>
-              <div class="k mt-2">Details</div><div class="v">${escapeHtml(row.title)}</div>
-              <div class="k mt-2">Phone / WhatsApp</div><div class="v">${escapeHtml(row.phone || "—")} / ${escapeHtml(row.whatsapp || "—")}</div>
-              <div class="k mt-2">Paid / Remaining / Total</div><div class="v">${fmtMoney(row.paid)} · ${fmtMoney(row.remaining)} · ${fmtMoney(row.amount)}</div>
-              <div class="k mt-2">Date</div><div class="v">${escapeHtml(row.date)}</div>
+                </div>
+
+                <div class="fw-bold">
+                    ${formatCurrency(total)}
+                </div>
+
             </div>
-          `;
-        }).join("");
-      }
-    }
+        `;
 
+    }).join("");
+}
+ 
+function renderHistory(invoice) {
+
+if (!historyList) return;
+
+const customerPhone = String(
+    invoice.whatsapp ||
+    invoice.phone ||
+    ""
+).trim();
+
+const customerName = String(
+    invoice.customerName ||
+    invoice.name ||
+    ""
+).trim();
+
+const invoices = getInvoices();
+
+const history = invoices.filter(inv => {
+
+    const phone = String(
+        inv.whatsapp ||
+        inv.phone ||
+        ""
+    ).trim();
+
+    const name = String(
+        inv.customerName ||
+        inv.name ||
+        ""
+    ).trim();
+
+    return (
+        phone === customerPhone ||
+        name.toLowerCase() === customerName.toLowerCase()
+    );
+
+});
+
+history.sort((a, b) =>
+    new Date(b.date || 0) -
+    new Date(a.date || 0)
+);
+
+if (!history.length) {
+
+    historyList.innerHTML = `
+        <div class="text-center text-muted py-3">
+            No history found.
+        </div>
+    `;
+
+    return;
+
+}
+
+historyList.innerHTML = history.map(inv => `
+
+    <div class="history-item">
+
+        <div>
+
+            <div class="fw-bold">
+                ${inv.invoiceNumber}
+            </div>
+
+            <small class="text-muted">
+                ${formatDate(inv.date)}
+            </small>
+
+        </div>
+
+        <div class="text-end">
+
+            <div class="fw-bold">
+                ${formatCurrency(inv.total)}
+            </div>
+
+            <small class="${statusColor(inv.status)}">
+                ${inv.status}
+            </small>
+
+        </div>
+
+    </div>
+
+`).join("");
+
+}
     function setHistoryTab(tab) {
       document.querySelectorAll(".history-tab").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.historyTab === tab);
@@ -1336,117 +1333,50 @@
       });
     }
 
-    async function loadInvoice() {
-      if (!invoiceId) {
-        showError("Missing invoice id in the URL.");
-        return;
-      }
+    async function loadInvoice(invoiceNo) {
 
-      const [shopName, shopPhone, shopWhatsapp, invoicesRaw, repairsRaw, paymentsRaw] = await Promise.all([
-        getSettingValue("shopName", "Waasuge Electronics"),
-        getSettingValue("phone", "617125558"),
-        getSettingValue("whatsapp", "252617125558"),
-        getInvoices(),
-        getRepairs(),
-        getPayments().catch(() => null)
-      ]);
+await waitForDatabase();
 
-      const invoiceList = toArray(invoicesRaw);
-      const repairList = toArray(repairsRaw);
-      const paymentList = toArray(paymentsRaw);
+const invoices = getInvoices();
 
-      const invoice = invoiceList.find((item) => {
-        const rowId = String(item?.invoiceNumber || item?.id || "").trim();
-        return rowId === invoiceId || String(item?.id || "").trim() === invoiceId;
-      });
+const invoice = invoices.find(inv =>
 
-      if (!invoice) {
-        showError(`Invoice ${invoiceId} was not found.`);
-        return;
-      }
+    String(inv.invoiceNumber || "").trim() === invoiceNo ||
 
-      const total = safeNumber(invoice.finalTotal ?? invoice.total ?? invoice.amount ?? 0);
-      const paid = safeNumber(invoice.paidAmount ?? 0);
-      const remaining = Math.max(0, safeNumber(invoice.balance ?? total - paid));
+    String(inv.id || "").trim() === invoiceNo ||
 
-      const phone = String(invoice.customerPhone || "—");
-      const customerName = String(invoice.customerName || "Customer");
-      const invoiceNo = String(invoice.invoiceNumber || invoice.id || invoiceId);
-      const shopDigits = digitsOnly(shopPhone) || "617125558";
-      const ussd = buildUssd(remaining, shopDigits);
-      const telLink = telLinkFromUssd(ussd);
-      const whatsappDigits = normalizePhoneForWhatsApp(invoice.customerWhatsapp || shopWhatsapp || shopPhone || "252617125558") || "252617125558";
-      const payPage = `https://waasuge-shop.netlify.app/pay?id=${encodeURIComponent(invoiceId)}`;
+    String(inv.invoiceNo || "").trim() === invoiceNo
 
-      ui.shopName.textContent = shopName || "Waasuge Electronics";
-      ui.welcomeText.textContent = `Welcome ${customerName}! Your invoice payment page is ready.`;
-      ui.helloTitle.textContent = `Hello ${customerName} 👋`;
-      ui.helloText.textContent = "Thank you for choosing Waasuge Electronics. Please review your invoice and complete payment easily.";
-      ui.customerName.textContent = customerName;
-      ui.customerPhone.textContent = phone;
-      ui.invoiceNo.textContent = invoiceNo;
-      ui.invoiceStatus.textContent = `Status: ${invoice.paymentStatus || (remaining <= 0 ? "Paid" : "Partial")}`;
-      ui.totalValue.textContent = fmtMoney(total);
-      ui.paidValue.textContent = fmtMoney(paid);
-      ui.remainingValue.textContent = fmtMoney(remaining);
-      ui.customerBox.textContent = customerName;
-      ui.invoiceBox.textContent = invoiceNo;
-      ui.totalBox.textContent = fmtMoney(total);
-      ui.remainingBox.textContent = fmtMoney(remaining);
-      ui.pageNote.textContent = "Tap Pay Now to open the dialer with the exact remaining balance.";
-      ui.footerText.textContent = `Invoice page: ${payPage}`;
+);
 
-      const status = invoice.paymentStatus || (remaining <= 0 ? "paid" : "partial");
-      setStatus(status);
+if (!invoice) {
 
-      const whatsappMessage = encodeURIComponent(
-        `Hello Waasuge Electronics, I opened invoice ${invoiceNo}. Remaining balance is ${fmtMoney(remaining)}. Please help me pay.`
-      );
+    document.body.innerHTML = `
+        <div class="container py-5 text-center">
 
-      ui.payNowLink.href = telLink;
-      ui.ussdLink.href = telLink;
-      ui.ussdLink.textContent = ussd;
-      ui.visitLink.href = "https://waasuge-shop.netlify.app/";
-      ui.dockVisit.href = "https://waasuge-shop.netlify.app/";
-      ui.whatsappLink = null;
+            <h3>Invoice Not Found</h3>
 
-      ui.dockWhatsApp.href = `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`;
+            <p class="text-muted">
+                ${invoiceNo}
+            </p>
 
-      if (remaining <= 0) {
-        ui.payNowLink.innerHTML = `<i class="bi bi-check2-circle"></i> Paid`;
-        ui.payNowLink.href = "#";
-        ui.payNowLink.style.pointerEvents = "none";
-        ui.payNowLink.style.opacity = ".78";
-        ui.ussdLink.textContent = "Invoice already paid";
-        ui.ussdLink.href = "#";
-      }
+        </div>
+    `;
 
-      ui.customerPhone.textContent = phone;
-      ui.loadingRow?.classList.add("d-none");
-      ui.errorBox?.classList.add("d-none");
+    return;
+}
 
-      const items = toArray(invoice.items || []);
-      renderItems(items);
+currentInvoice = invoice;
 
-      const sameInvoices = invoiceList.filter((item) => item && isSameCustomer(item, invoice));
-      const sameRepairs = repairList.filter((item) => item && isSameCustomer(item, invoice));
-      const samePayments = paymentList.filter((item) => item && isSameCustomer(item, invoice));
+renderInvoice(invoice);
 
-      const invoiceRows = sameInvoices.map((item) => normalizeHistoryItem(item, "Invoice"));
-      const repairRows = sameRepairs.map((item) => normalizeHistoryItem(item, "Repair"));
-      const paymentRows = samePayments.map((item) => normalizeHistoryItem(item, "Payment"));
+renderItems(invoice);
 
-      const combinedRows = [...invoiceRows, ...repairRows, ...paymentRows].sort((a, b) => (b.stamp || 0) - (a.stamp || 0));
+renderHistory(invoice);
 
-      renderHistoryTable(combinedRows, ui.historyBody, ui.historyCards, "all");
-      renderHistoryTable(invoiceRows, ui.invoiceHistoryBody, ui.invoiceHistoryCards, "invoices");
-      renderHistoryTable(repairRows, ui.repairHistoryBody, ui.repairHistoryCards, "repairs");
-      renderHistoryTable(paymentRows, ui.paymentHistoryBody, ui.paymentHistoryCards, "payments");
-
-      document.title = `${invoiceNo} | Waasuge Electronics`;
-    }
-
-    document.querySelectorAll("[data-history-tab]").forEach((btn) => {
+}
+   
+document.querySelectorAll("[data-history-tab]").forEach((btn) => {
       btn.addEventListener("click", () => setHistoryTab(btn.dataset.historyTab));
     });
 
