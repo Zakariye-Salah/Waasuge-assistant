@@ -1572,31 +1572,34 @@ function buildMessage(invoice, channel = "whatsapp") {
     return [
       `Asc ${name} : ${phone}`,
       `Invoice No: ${invoiceNo}`,
-      `Status: Paid`, `Bixisay: ${paidText}`,
+      `Status: Paid`,
+      `Bixisay: ${paidText}`,
       `Mahadsanid`,
       websiteLine,
       footer
     ].join("\n");
   }
-
+  
   if (status === "partial") {
     return [
       `Asc ${name} : ${phone}`,
       `Invoice No: ${invoiceNo}`,
-      `Status: Partial`,`Total: ${totalText}`,
-      `Discount: ${discountText}`,
-      `Bixisay: ${paidText} Haraaga Hada: ${remainingText}`,
+      `Status: Partial`,
+      `Total: ${totalText}`,
+      `Bixisay: ${paidText}`,
+      `Haraaga: ${remainingText}`,
       ussd,
       `Waad ku mahadsantahay adeegaaga`,
       websiteLine,
       footer
     ].join("\n");
   }
-
+  
   return [
     `Asc ${name} : ${phone}`,
     `Invoice No: ${invoiceNo}`,
-    `Status: Unpaid`, `Total: ${totalText}`,
+    `Status: Unpaid`,
+    `Total: ${totalText}`,
     `Haraaga: ${remainingText}`,
     ussd,
     `Waad ku mahadsantahay adeegaaga`,
@@ -1607,15 +1610,43 @@ function buildMessage(invoice, channel = "whatsapp") {
 
 function openShareInvoice(invoice, channel = "whatsapp") {
   const message = encodeURIComponent(buildMessage(invoice, channel));
-  const phone = String(invoice?.customerPhone || "").replace(/\D/g, "");
-  if (String(channel) === "sms") {
-    const smsUrl = phone ? `sms:${phone}?body=${message}` : `sms:?body=${message}`;
+
+  const smsPhone = String(
+    invoice?.customerPhone || ""
+  ).replace(/\D/g, "");
+
+  const whatsappPhone = String(
+    invoice?.customerWhatsapp ||
+    invoice?.customerPhone ||
+    ""
+  ).replace(/\D/g, "");
+
+  if (String(channel).toLowerCase() === "sms") {
+    const smsUrl = smsPhone
+      ? `sms:${smsPhone}?body=${message}`
+      : `sms:?body=${message}`;
+
     window.open(smsUrl, "_self");
     return;
   }
-  const url = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+
+  const whatsappUrl = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${message}`
+    : `https://wa.me/?text=${message}`;
+
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 }
+// function openShareInvoice(invoice, channel = "whatsapp") {
+//   const message = encodeURIComponent(buildMessage(invoice, channel));
+//   const phone = String(invoice?.customerPhone || "").replace(/\D/g, "");
+//   if (String(channel) === "sms") {
+//     const smsUrl = phone ? `sms:${phone}?body=${message}` : `sms:?body=${message}`;
+//     window.open(smsUrl, "_self");
+//     return;
+//   }
+//   const url = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
+//   window.open(url, "_blank", "noopener,noreferrer");
+// }
 
 
 
