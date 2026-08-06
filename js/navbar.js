@@ -329,7 +329,7 @@ function headerMoreModalsHtml() {
         <div class="modal-body pt-3 text-center">
           <div class="d-flex justify-content-center mb-3">
             <div class="developer-avatar-wrap position-relative">
-              <img src="assets/eng-zaki.png" alt="Eng Sakariya Salah" class="rounded-circle border shadow-sm developer-avatar" onerror="this.style.display='none'">
+              <img src="/assets/eng-zaki.png" alt="Eng Sakariya Salah" class="rounded-circle border shadow-sm developer-avatar" onerror="this.style.display='none'">
             </div>
           </div>
           <div class="fw-bold fs-4 mb-1">Eng Sakariya Salah</div>
@@ -370,6 +370,7 @@ function headerMoreModalsHtml() {
     </div>
   </div>`;
 }
+
 
 function ensureHeaderMoreUI() {
   const group = getHeaderActionGroup();
