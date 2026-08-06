@@ -2070,13 +2070,43 @@ async function loadInvoices() {
     updateCartBadge();
     renderInvoiceCustomerSuggestions();
   } catch (error) {
-    void 0;
-    showToast("Invoice data could not be loaded from Firebase.", "warning", "Invoice");
-  } finally {
-    document.body.classList.remove('invoice-page-loading');
-    setTimeout(() => setPageLoading(invoiceLoadingTargets(), false), 220);
+    console.error("==========================================");
+    console.error("❌ Invoice load failed");
+    console.error("Error Code:", error?.code || "N/A");
+    console.error("Error Message:", error?.message || "Unknown error");
+    console.error("Full Error:", error);
+    console.error("==========================================");
+  
+    showToast(
+      `Invoice data could not be loaded from Firebase.\n\n${error?.code || ""}\n${error?.message || "Unknown error"}`,
+      "warning",
+      "Invoice"
+    );
+  
+    // Optional: show the error on the page for debugging
+    if (invoiceItemsBody) {
+      invoiceItemsBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="padding:20px;text-align:center;color:#e53935;">
+            <strong>Failed to load invoice data.</strong><br>
+            <small>${error?.code || ""}</small><br>
+            <small>${error?.message || "Unknown Firebase error"}</small>
+          </td>
+        </tr>
+      `;
+    }
   }
+  finally {
+    document.body.classList.remove("invoice-page-loading");
+    setTimeout(() => {
+      setPageLoading(invoiceLoadingTargets(), false);
+    }, 220);
+  } 
+  
 }
+
+
+
 
 async function saveInvoiceFromPage(button = null) {
   await saveInvoiceWithGuard(async () => {
