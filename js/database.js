@@ -74,8 +74,13 @@ export function filterDeleted(items) {
 }
 
 export async function getOnce(path) {
-  const snapshot = await get(dbRef(path));
-  return snapshot.exists() ? snapshot.val() : null;
+  try {
+    const snapshot = await get(dbRef(path));
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (error) {
+    console.error( `Firebase read failed at ${path}:`, error?.code, error?.message, error);
+    throw error;
+  }
 }
 
 export async function getAllRecords(path) {
